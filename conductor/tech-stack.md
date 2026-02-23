@@ -60,14 +60,15 @@
 ```
 /usr/
 ├── bin/blugon-lite          # Script principal
-├── lib/blugon/
-│   ├── scg                  # Backend SCG compilado
-│   └── tty.sh               # Backend TTY (eliminado en lite)
+├── lib/blugon-lite/
+│   └── scg                  # Backend SCG compilado
 ├── share/man/man1/
 │   └── blugon-lite.1.gz     # Página de manual
 ├── share/bash-completion/
 │   └── completions/blugon-lite
-└── share/blugon/configs/    # Configuraciones de ejemplo
+└── share/blugon-lite/
+    └── configs/             # Configuraciones de ejemplo
+        └── evening/gamma    # Horario evening (17:00-08:00)
 ```
 
 ## Notas de Implementación
