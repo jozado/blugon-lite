@@ -1,0 +1,105 @@
+.TH BLUGON-LITE 1 "February 2026" "blugon-lite 1.0.0-lite" "User Commands"
+
+.SH NAME
+blugon-lite \- Blue Light Filter for X Window System (minimalist version)
+
+.SH SYNOPSIS
+.B blugon-lite
+[\fB\-v\fR|\fB\-\-version\fR]
+[\fB\-o\fR|\fB\-\-once\fR]
+[\fB\-i\fR|\fB\-\-interval\fR \fISECS\fR]
+[\fB\-c\fR|\fB\-\-configdir\fR \fIPATH\fR]
+[\fB\-b\fR|\fB\-\-backend\fR \fIBACKEND\fR]
+
+.SH DESCRIPTION
+blugon-lite is a lightweight blue light filter for X Window System. It adjusts screen color temperature based on time of day, reducing blue light during evening hours to improve sleep quality.
+
+This is a minimalist fork of blugon, optimized for lower RAM consumption (< 8MB) and reduced code complexity (202 lines).
+
+.SH OPTIONS
+.TP
+.BR \-v ", " \-\-version
+Print version information and exit.
+
+.TP
+.BR \-o ", " \-\-once
+Apply gamma values for current time once and exit.
+
+.TP
+.BR \-i ", " \-\-interval [\fISECS\fR]
+Set time between refreshes in seconds (default: 120).
+
+.TP
+.BR \-c ", " \-\-configdir ", " \-\-config [\fIPATH\fR]
+Specify configuration directory (default: $XDG_CONFIG_HOME/blugon or ~/.config/blugon).
+
+.TP
+.BR \-b ", " \-\-backend [\fIBACKEND\fR]
+Choose backend for communication with X. Available: scg, xgamma (default: scg).
+
+.SH CONFIGURATION
+Configuration files are read from ~/.config/blugon/
+
+.TP
+.B gamma
+Gamma/temperature schedule file. Format: "hour minute value" where value can be temperature (Kelvin) or RGB gamma values (0.0-1.0).
+
+.SH EXAMPLES
+.TP
+Run as daemon:
+.B blugon-lite
+
+.TP
+Apply once and exit:
+.B blugon-lite --once
+
+.TP
+Use xgamma backend:
+.B blugon-lite --backend xgamma
+
+.TP
+Custom refresh interval (60 seconds):
+.B blugon-lite --interval 60
+
+.SH FILES
+.TP
+.I ~/.config/blugon/gamma
+Gamma configuration file.
+
+.TP
+.I /usr/share/blugon-lite/configs/evening/gamma
+Example evening schedule configuration.
+
+.SH BACKENDS
+.TP
+.B scg
+Uses Xrandr extension for gamma control. Requires libxrandr. Best quality.
+
+.TP
+.B xgamma
+Uses xorg-xgamma command. More compatible but requires external dependency.
+
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+
+.TP
+.B 12
+Cannot open display (scg backend only).
+
+.TP
+.B 1
+General error.
+
+.SH SEE ALSO
+redshift(1), sct(1), xgamma(1)
+
+.SH BUGS
+Report bugs at https://github.com/jumper149/blugon/issues
+
+.SH AUTHOR
+blugon-lite is a fork of blugon by jumper149.
+
+.SH LICENSE
+Apache-2.0

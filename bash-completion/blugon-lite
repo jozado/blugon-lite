@@ -1,0 +1,34 @@
+# bash completion for blugon-lite
+_blugon_lite()
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="-v -o -i -c -b --version --once --interval --configdir --config --backend"
+
+    if [[ ${cur} == -* ]]; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    case "${prev}" in
+        -i|--interval)
+            COMPREPLY=( $(compgen -W "60 120 300 600" -- ${cur}) )
+            return 0
+            ;;
+        -c|--configdir|--config)
+            COMPREPLY=( $(compgen -d -- ${cur}) )
+            return 0
+            ;;
+        -b|--backend)
+            COMPREPLY=( $(compgen -W "scg xgamma" -- ${cur}) )
+            return 0
+            ;;
+        *)
+            COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+            return 0
+            ;;
+    esac
+}
+complete -F _blugon_lite blugon-lite

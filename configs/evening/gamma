@@ -1,0 +1,20 @@
+# blugon-lite evening gamma configuration
+# Format: hour minute temperature (Kelvin)
+#
+# Evening schedule: 17:00 - 08:00 night mode
+# Reduces blue light during evening hours for better sleep
+
+# Daytime (08:00) - Normal white (6500K)
+8 0 6500
+
+# Evening transition starts (17:00) - Warm white (4500K)
+17 0 4500
+
+# Night mode (21:00) - Reduced blue light (3000K)
+21 0 3000
+
+# Deep night (00:00) - Minimal blue light (2000K)
+0 0 2000
+
+# Early morning (06:00) - Start transitioning back (2500K)
+6 0 2500

@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+"""blugon-lite - Blue Light Filter for X Window System (minimalist version)."""
+
+from configparser import ConfigParser
+from argparse import ArgumentParser
+import time
+import math
+from subprocess import check_call
+from os import getenv, path
+from sys import stdout
+
+VERSION = '1.0.0-lite'
+MAKE_INSTALL_PREFIX = '/usr'
+
+# Default configuration
+DISPLAY = getenv('DISPLAY')
+ONCE = False
+INTERVAL = 120
+CONFIG_DIR = getenv('XDG_CONFIG_HOME') or getenv('HOME') + '/.config'
+CONFIG_DIR += '/blugon'
+BACKEND = 'scg'
+
+MAX_MINUTE = 24 * 60
+NORMAL_TEMP = 6600.0
+NORMAL_RED, NORMAL_GREEN, NORMAL_BLUE = 1.0, 1.0, 1.0
+BACKEND_LIST = ['xgamma', 'scg']
+
+
+def temp_to_gamma(temp):
+    """Transform temperature in Kelvin to Gamma values (0-1).
+    Algorithm by Tanner Helland: http://www.tannerhelland.com/4435/"""
+    def rgb_to_gamma(color):
+        color = max(0, min(255, color))
+        return color / 255
+
+    temp = temp / 100
+    if temp <= 66:
+        r = 255
+    else:
+        r = temp - 60
+        r = 329.698727446 * (r ** -0.1332047592)
+
+    if temp <= 66:
+        g = temp
+        g = 99.4708025861 * math.log(g) - 161.1195681661
+    else:
+        g = temp - 60
+        g = 288.1221695283 * (g ** -0.0755148492)
+
+    if temp <= 10:
+        b = 0
+    elif temp >= 66:
+        b = 255
+    else:
+        b = temp - 10
+        b = 138.5177312231 * math.log(b) - 305.0447927307
+
+    return map(rgb_to_gamma, (r, g, b))
+
+
+def read_gamma(config_dir):
+    """Read gamma configuration file. Returns (gamma_list, minutes_list)."""
+    config_file = config_dir + 'gamma'
+    fallback_file = MAKE_INSTALL_PREFIX + '/share/blugon/configs/default/gamma'
+
+    try:
+        file_gamma = open(config_file, 'r')
+    except:
+        file_gamma = open(fallback_file, 'r')
+
+    gamma = []
+    for line in file_gamma.read().splitlines():
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        parts = list(map(float, line.split()))
+        if len(parts) == 3:  # hour minute temperature
+            r, g, b = temp_to_gamma(parts[2])
+            parts = [parts[0], parts[1], r, g, b]
+        if len(parts) != 5:
+            raise ValueError('Invalid gamma line: ' + line)
+        parts[0] = int(60 * parts[0] + parts[1])  # to minutes
+        gamma.append(parts[1:])  # [red, green, blue]
+        del parts[0]
+
+    file_gamma.close()
+    gamma.sort(key=lambda x: x[0])  # sort by minutes
+    minutes = [g[0] for g in gamma]
+    gamma = [[g[1], g[2], g[3]] for g in gamma]  # [[r,g,b], ...]
+    return gamma, minutes
+
+
+def calc_gamma(minute, list_minutes, list_gamma):
+    """Calculate interpolated RGB gamma values for current minute."""
+    next_index = list_minutes.index(next((x for x in list_minutes if x >= minute), list_minutes[0]))
+    next_minute = list_minutes[next_index]
+    prev_minute = list_minutes[next_index - 1]
+    if next_minute < prev_minute:
+        next_minute += MAX_MINUTE
+
+    def inbetween(next_val, prev_val):
+        diff = next_val - prev_val
+        diff_minute = (next_minute - prev_minute) % MAX_MINUTE
+        add_minute = (minute - prev_minute) % MAX_MINUTE
+        try:
+            factor = add_minute / diff_minute
+        except:
+            factor = 0
+        return prev_val + factor * diff
+
+    idx = next_index
+    r = inbetween(list_gamma[idx][0], list_gamma[idx - 1][0])
+    g = inbetween(list_gamma[idx][1], list_gamma[idx - 1][1])
+    b = inbetween(list_gamma[idx][2], list_gamma[idx - 1][2])
+    return r, g, b
+
+
+def call_xgamma(r, g, b):
+    """Apply gamma using xorg-xgamma."""
+    def bound(gamma):
+        return max(0.1, min(10.0, gamma))
+    r, g, b = map(bound, (r, g, b))
+    check_call(['xgamma', '-quiet', '-rgamma', str(r), '-ggamma', str(g), '-bgamma', str(b)])
+
+
+def call_scg(r, g, b):
+    """Apply gamma using scg backend (Xrandr)."""
+    check_call([MAKE_INSTALL_PREFIX + '/lib/blugon/scg', str(r), str(g), str(b)])
+
+
+def call_backend(backend, r, g, b):
+    """Call appropriate backend with gamma values."""
+    if backend == 'xgamma':
+        call_xgamma(r, g, b)
+    elif backend == 'scg':
+        call_scg(r, g, b)
+
+
+def get_minute():
+    """Return current time as minutes from midnight."""
+    now = time.localtime()
+    return 60 * now.tm_hour + now.tm_min + now.tm_sec / 60
+
+
+def main():
+    global ONCE, INTERVAL, CONFIG_DIR, BACKEND
+
+    # Parse arguments
+    argparser = ArgumentParser(prog='blugon-lite', description='Blue Light Filter for X (lite)')
+    argparser.add_argument('-v', '--version', action='store_true', help='print version')
+    argparser.add_argument('-o', '--once', action='store_true', help='apply once and exit')
+    argparser.add_argument('-i', '--interval', nargs='?', dest='interval', type=float,
+                          help='interval in seconds (default: 120)')
+    argparser.add_argument('-c', '--configdir', '--config', nargs='?', dest='config_dir',
+                          help='configuration directory')
+    argparser.add_argument('-b', '--backend', nargs='?', dest='backend', help='backend (scg/xgamma)')
+    args = argparser.parse_args()
+
+    if args.version:
+        print('blugon-lite ' + VERSION)
+        return
+
+    # Apply arguments
+    if args.config_dir:
+        CONFIG_DIR = args.config_dir
+    if not CONFIG_DIR.endswith('/'):
+        CONFIG_DIR += '/'
+    if args.interval:
+        INTERVAL = math.ceil(args.interval)
+    if args.backend:
+        BACKEND = args.backend
+    if not BACKEND in BACKEND_LIST:
+        raise ValueError('Invalid backend. Choose: ' + ', '.join(BACKEND_LIST))
+    ONCE = args.once
+
+    # Validate config directory
+    if not path.exists(CONFIG_DIR):
+        raise ValueError('Config directory not found: ' + CONFIG_DIR)
+
+    # Read gamma configuration
+    list_gamma, list_minutes = read_gamma(CONFIG_DIR)
+
+    def apply_gamma():
+        minute = get_minute()
+        r, g, b = calc_gamma(minute, list_minutes, list_gamma)
+        call_backend(BACKEND, r, g, b)
+
+    if ONCE:
+        apply_gamma()
+        return
+
+    # Main loop
+    while True:
+        try:
+            apply_gamma()
+            time.sleep(INTERVAL)
+        except:
+            break
+
+
+if __name__ == "__main__":
+    main()

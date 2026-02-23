@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Crear blugon-lite.py eliminando características innecesarias y manteniendo funcionalidad core**
+- [~] **Track: Crear blugon-lite.py eliminando características innecesarias y manteniendo funcionalidad core**
   *Link: [./tracks/blugon_lite_20260223/](./tracks/blugon_lite_20260223/)*
