@@ -4,21 +4,21 @@
 
 ---
 
-## Fase 1: Auto-Configuración del Script [checkpoint: ]
+## Fase 1: Auto-Configuración del Script [checkpoint: ecd050e]
 
-- [ ] Task: Modificar blugon-lite.py con fallback automático
-    - [ ] Actualizar función read_gamma() para buscar en múltiples ubicaciones
-    - [ ] Agregar configuración hardcodeada por defecto
-    - [ ] Mantener compatibilidad con configs existentes
-    - [ ] Testear que funciona sin ~/.config/blugon/gamma
+- [x] Task: Modificar blugon-lite.py con fallback automático
+    - [x] Actualizar función read_gamma() para buscar en múltiples ubicaciones
+    - [x] Agregar configuración hardcodeada por defecto
+    - [x] Mantener compatibilidad con configs existentes
+    - [x] Testear que funciona sin ~/.config/blugon/gamma
 
-- [ ] Task: Mejorar archivo configs/evening/gamma
-    - [ ] Agregar comentarios detallados sobre formato
-    - [ ] Incluir guía de temperaturas (6500K, 4500K, 3000K, 2000K)
-    - [ ] Ejemplos de cómo agregar/quitar horarios
-    - [ ] Mantener horario 17:00-08:00 como default
+- [x] Task: Mejorar archivo configs/evening/gamma
+    - [x] Agregar comentarios detallados sobre formato
+    - [x] Incluir guía de temperaturas (6500K, 4500K, 3000K, 2000K)
+    - [x] Ejemplos de cómo agregar/quitar horarios
+    - [x] Mantener horario 17:00-08:00 como default
 
-- [ ] Task: Conductor - User Manual Verification 'Auto-Configuración' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Auto-Configuración' (Protocol in workflow.md)
 
 ---
 
