@@ -8,6 +8,7 @@ import math
 from subprocess import check_call
 from os import getenv, path
 from sys import stdout
+from io import StringIO
 
 VERSION = '1.0.0-lite'
 MAKE_INSTALL_PREFIX = '/usr'
@@ -59,14 +60,46 @@ def temp_to_gamma(temp):
 
 
 def read_gamma(config_dir):
-    """Read gamma configuration file. Returns (gamma_list, minutes_list)."""
+    """Read gamma configuration file. Returns (gamma_list, minutes_list).
+    
+    Search order:
+    1. ~/.config/blugon/gamma (user config)
+    2. /usr/share/blugon-lite/configs/evening/gamma (system config)
+    3. Hardcoded default configuration
+    """
     config_file = config_dir + 'gamma'
-    fallback_file = MAKE_INSTALL_PREFIX + '/share/blugon/configs/default/gamma'
+    system_config_file = MAKE_INSTALL_PREFIX + '/share/blugon-lite/configs/evening/gamma'
+    
+    # Default hardcoded configuration (evening schedule: 17:00-08:00)
+    default_config = """# Default blugon-lite configuration
+# Evening schedule: 17:00 - 08:00 night mode
 
+# Daytime (08:00) - Normal white (6500K)
+8 0 6500
+
+# Evening transition starts (17:00) - Warm white (4500K)
+17 0 4500
+
+# Night mode (21:00) - Reduced blue light (3000K)
+21 0 3000
+
+# Deep night (00:00) - Minimal blue light (2000K)
+0 0 2000
+
+# Early morning (06:00) - Start transitioning back (2500K)
+6 0 2500
+"""
+
+    # Try to read from user config, system config, or use hardcoded default
+    file_gamma = None
     try:
         file_gamma = open(config_file, 'r')
     except:
-        file_gamma = open(fallback_file, 'r')
+        try:
+            file_gamma = open(system_config_file, 'r')
+        except:
+            # Use hardcoded default configuration
+            file_gamma = StringIO(default_config)
 
     gamma = []
     for line in file_gamma.read().splitlines():
@@ -79,9 +112,8 @@ def read_gamma(config_dir):
             parts = [parts[0], parts[1], r, g, b]
         if len(parts) != 5:
             raise ValueError('Invalid gamma line: ' + line)
-        parts[0] = int(60 * parts[0] + parts[1])  # to minutes
-        gamma.append(parts[1:])  # [red, green, blue]
-        del parts[0]
+        minutes_value = int(60 * parts[0] + parts[1])  # to minutes
+        gamma.append([minutes_value, parts[2], parts[3], parts[4]])  # [minutes, red, green, blue]
 
     file_gamma.close()
     gamma.sort(key=lambda x: x[0])  # sort by minutes
@@ -173,11 +205,7 @@ def main():
         raise ValueError('Invalid backend. Choose: ' + ', '.join(BACKEND_LIST))
     ONCE = args.once
 
-    # Validate config directory
-    if not path.exists(CONFIG_DIR):
-        raise ValueError('Config directory not found: ' + CONFIG_DIR)
-
-    # Read gamma configuration
+    # Read gamma configuration (uses fallback if config dir doesn't exist)
     list_gamma, list_minutes = read_gamma(CONFIG_DIR)
 
     def apply_gamma():

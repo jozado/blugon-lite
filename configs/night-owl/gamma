@@ -1,0 +1,56 @@
+# =============================================================================
+# blugon-lite Night Owl Gamma Configuration
+# =============================================================================
+# Perfil para usuarios nocturnos (activos hasta tarde)
+#
+# Este perfil está optimizado para personas nocturnas:
+# - Luz normal hasta muy tarde
+# - Transición extremadamente tardía
+# - Soporte para horarios invertidos
+#
+# FORMATO: hora minuto temperatura (Kelvin)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Horario Night Owl: Luz normal hasta tarde, transición muy tardía
+# -----------------------------------------------------------------------------
+
+# Late night rest (04:00) - Mínimo azul (1800K)
+# Hora de dormir para nocturnos
+4 0 1800
+
+# Morning sleep (08:00) - Muy cálido (2000K)
+# Descanso matutino
+8 0 2000
+
+# Late wake-up (11:00) - Transición (3000K)
+# Despertar tardío gradual
+11 0 3000
+
+# Noon start (13:00) - Luz moderada (5000K)
+# Comenzar el día
+13 0 5000
+
+# Afternoon (15:00) - Luz día (6500K)
+# Productividad de la tarde
+15 0 6500
+
+# Evening (18:00) - Mantener luz día (6500K)
+# Continuar activo
+18 0 6500
+
+# Night begins (21:00) - Mantener luz día (6500K)
+# La noche comienza para nocturnos
+21 0 6500
+
+# Late night (00:00) - Comenzar transición (6000K)
+# Pequeña reducción
+0 0 6000
+
+# Very late (02:00) - Luz nocturna (5000K)
+# Actividad nocturna
+2 0 5000
+
+# Deep night (03:00) - Cálido (3500K)
+# Preparar para dormir
+3 0 3500

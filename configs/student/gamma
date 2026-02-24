@@ -1,0 +1,60 @@
+# =============================================================================
+# blugon-lite Student Gamma Configuration
+# =============================================================================
+# Perfil para estudiantes (horarios extendidos de estudio)
+#
+# Este perfil está optimizado para estudiantes:
+# - Luz normal extendida para sesiones de estudio
+# - Transición más tarde en la noche
+# - Soporte para madrugadas de estudio
+#
+# FORMATO: hora minuto temperatura (Kelvin)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Horario Student: Estudio extendido, transición tarde
+# -----------------------------------------------------------------------------
+
+# Early morning (07:00) - Despertar (4000K)
+# Despertar para clases tempranas
+7 0 4000
+
+# Morning classes (09:00) - Luz día (6500K)
+# Máxima alerta para clases de la mañana
+9 0 6500
+
+# Midday (12:00) - Mantener luz día (6500K)
+# Continuar productivo
+12 0 6500
+
+# Afternoon study (14:00) - Mantener luz día (6500K)
+# Sesión de estudio de la tarde
+14 0 6500
+
+# Late afternoon (17:00) - Comenzar transición suave (6000K)
+# Pequeña reducción para descanso
+17 0 6000
+
+# Evening study (19:00) - Luz estudio (5500K)
+# Continuar estudiando con luz moderada
+19 0 5500
+
+# Dinner break (21:00) - Luz cálida (4500K)
+# Descanso para cena
+21 0 4500
+
+# Night study (23:00) - Luz nocturna (3500K)
+# Estudio nocturno con menos azul
+23 0 3500
+
+# Late night (01:00) - Muy cálido (2500K)
+# Terminar de estudiar
+1 0 2500
+
+# Sleep time (02:00) - Mínimo azul (2000K)
+# Hora de dormir
+2 0 2000
+
+# Early morning rest (06:00) - Transición (2500K)
+# Comenzar nuevo ciclo
+6 0 2500

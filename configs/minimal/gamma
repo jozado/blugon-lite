@@ -1,0 +1,28 @@
+# =============================================================================
+# blugon-lite Minimal Gamma Configuration
+# =============================================================================
+# Perfil minimalista (solo 3 puntos: día, tarde, noche)
+#
+# Este perfil es ideal para:
+# - Usuarios nuevos que quieren simplicidad
+# - Personas que prefieren configuración básica
+# - Entender fácilmente cómo funciona blugon-lite
+#
+# FORMATO: hora minuto temperatura (Kelvin)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Horario Minimal: 3 puntos básicos
+# -----------------------------------------------------------------------------
+
+# Day (08:00) - Luz día normal (6500K)
+# Blanco neutro para productividad durante el día
+8 0 6500
+
+# Evening (18:00) - Transición (4500K)
+# Blanco cálido para la tarde
+18 0 4500
+
+# Night (22:00) - Luz nocturna (3000K)
+# Luz cálida para reducir luz azul antes de dormir
+22 0 3000

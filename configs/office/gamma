@@ -1,0 +1,52 @@
+# =============================================================================
+# blugon-lite Office Worker Gamma Configuration
+# =============================================================================
+# Perfil para trabajadores de oficina (horario típico 9:00-18:00)
+#
+# Este perfil está optimizado para personas que trabajan en oficina:
+# - Luz normal durante las horas de trabajo
+# - Transición gradual al salir del trabajo
+# - Modo noche activo durante la tarde/noche
+#
+# FORMATO: hora minuto temperatura (Kelvin)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Horario Office: 9:00 - 18:00 trabajo, transición 18:00 - 23:00
+# -----------------------------------------------------------------------------
+
+# Early morning (07:00) - Despertar suave (3500K)
+# Comienza el día con luz cálida para despertar gradualmente
+7 0 3500
+
+# Morning ramp-up (08:00) - Transición (5000K)
+# Aumentando luminosidad para preparar el trabajo
+8 0 5000
+
+# Work hours start (09:00) - Luz día normal (6500K)
+# Máxima productividad y alerta durante el trabajo
+9 0 6500
+
+# Midday (12:00) - Mantener luz día (6500K)
+# Continuar con luz normal durante el almuerzo
+12 0 6500
+
+# Afternoon (15:00) - Mantener luz día (6500K)
+# Prevenir caída de energía de la tarde
+15 0 6500
+
+# End of work (18:00) - Comenzar transición (5500K)
+# Reducir gradualmente al salir del trabajo
+18 0 5500
+
+# Evening (20:00) - Luz cálida (4000K)
+# Relajación después del trabajo
+20 0 4000
+
+# Night mode (22:00) - Luz muy cálida (3000K)
+# Preparar para dormir
+22 0 3000
+
+# Deep night (00:00) - Mínimo azul (2000K)
+# Hora de dormir
+0 0 2000
