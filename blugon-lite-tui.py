@@ -140,7 +140,7 @@ class BlugonLiteTUI:
         # Create main loop
         self.loop = urwid.MainLoop(
             self.main_frame,
-            palette=self.palette,
+            palette=self.palette(),
             unhandled_input=self.handle_input,
             handle_mouse=False
         )
