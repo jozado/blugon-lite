@@ -1,0 +1,28 @@
+#!/bin/bash
+# blugon-lite-tui - Wrapper script for blugon-lite TUI
+
+# Check if Python 3 is available
+if ! command -v python3 &> /dev/null; then
+    echo "Error: python3 is required but not installed."
+    exit 1
+fi
+
+# Check if urwid is available
+if ! python3 -c "import urwid" 2>/dev/null; then
+    echo "Error: python3-urwid is required but not installed."
+    echo "Install it with: sudo apt install python3-urwid"
+    exit 1
+fi
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Try to find the Python TUI script
+if [ -f "$SCRIPT_DIR/blugon-lite-tui.py" ]; then
+    exec python3 "$SCRIPT_DIR/blugon-lite-tui.py" "$@"
+elif [ -f "/usr/lib/blugon-lite/blugon-lite-tui.py" ]; then
+    exec python3 "/usr/lib/blugon-lite/blugon-lite-tui.py" "$@"
+else
+    echo "Error: blugon-lite-tui.py not found."
+    exit 1
+fi

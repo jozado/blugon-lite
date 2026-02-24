@@ -3,11 +3,14 @@ PREFIX := /usr
 
 build:
 	sed "s|MAKE_INSTALL_PREFIX = '.*'|MAKE_INSTALL_PREFIX = '$(PREFIX)'|g" blugon-lite.py > blugon-lite
+	sed "s|MAKE_INSTALL_PREFIX = '.*'|MAKE_INSTALL_PREFIX = '$(PREFIX)'|g" blugon-lite-tui.py > blugon-lite-tui-installed.py
 	gzip --best --force --keep blugon-lite.1
 	cd backends/scg && make build
 
 install:
 	install -D -m755 blugon-lite $(DESTDIR)$(PREFIX)/bin/blugon-lite
+	install -D -m755 blugon-lite-tui $(DESTDIR)$(PREFIX)/bin/blugon-lite-tui
+	install -D -m755 blugon-lite-tui-installed.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/blugon-lite-tui.py
 	install -D -m644 blugon-lite.1.gz $(DESTDIR)$(PREFIX)/share/man/man1/blugon-lite.1.gz
 	install -D -m644 bash-completion/blugon-lite $(DESTDIR)$(PREFIX)/share/bash-completion/completions/blugon-lite
 	install -D -m755 backends/scg/scg $(DESTDIR)$(PREFIX)/lib/blugon-lite/scg
@@ -19,6 +22,8 @@ install:
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/blugon-lite
+	rm -f $(DESTDIR)$(PREFIX)/bin/blugon-lite-tui
+	rm -f $(DESTDIR)$(PREFIX)/lib/blugon-lite/blugon-lite-tui.py
 	rm -f $(DESTDIR)$(PREFIX)/share/man/man1/blugon-lite.1.gz
 	rm -f $(DESTDIR)$(PREFIX)/share/bash-completion/completions/blugon-lite
 	rm -rf $(DESTDIR)$(PREFIX)/lib/blugon-lite
