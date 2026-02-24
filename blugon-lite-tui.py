@@ -176,14 +176,7 @@ class BlugonLiteTUI:
             urwid.Text("  blugon-lite TUI - Configuration Editor", align='center'),
             'header'
         )
-        
-        # Schedule list
-        self.schedule_items = []
-        self.refresh_schedule_list()
-        
-        self.schedule_walker = urwid.SimpleFocusListWalker(self.schedule_items)
-        self.schedule_list = ScheduleListBox(self.schedule_walker)
-        
+
         # Instructions
         self.instructions = urwid.Text([
             "\n",
@@ -195,13 +188,20 @@ class BlugonLiteTUI:
             ('status', "q"), " Quit  ",
             ('status', "h"), " Help"
         ])
-        
-        # Status line
+
+        # Status line (create before refresh_schedule_list)
         self.status = urwid.AttrMap(
             urwid.Text(" Ready"),
             'status'
         )
-        
+
+        # Schedule list
+        self.schedule_items = []
+        self.refresh_schedule_list()
+
+        self.schedule_walker = urwid.SimpleFocusListWalker(self.schedule_items)
+        self.schedule_list = ScheduleListBox(self.schedule_walker)
+
         # Footer
         self.footer = urwid.AttrMap(
             urwid.Text(f"  Version: {VERSION}  |  Config: {CONFIG_FILE}", align='center'),
