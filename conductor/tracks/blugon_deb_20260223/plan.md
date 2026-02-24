@@ -22,82 +22,82 @@
 
 ---
 
-## Fase 2: TUI con urwid [checkpoint: ]
+## Fase 2: TUI con urwid [checkpoint: 176153d]
 
-- [ ] Task: Configurar entorno de desarrollo para TUI
-    - [ ] Instalar urwid (pip install urwid)
-    - [ ] Crear archivo blugon-lite-tui.py básico
-    - [ ] Implementar ventana principal con título
-    - [ ] Implementar loop principal de urwid
+- [x] Task: Configurar entorno de desarrollo para TUI
+    - [x] Instalar urwid (pip install urwid)
+    - [x] Crear archivo blugon-lite-tui.py básico
+    - [x] Implementar ventana principal con título
+    - [x] Implementar loop principal de urwid
 
-- [ ] Task: Implementar visualización de horarios
-    - [ ] Leer configuración actual desde ~/.config/blugon/gamma
-    - [ ] Mostrar lista de horarios con navegación (↑↓)
-    - [ ] Mostrar gamma actual y próxima transición
-    - [ ] Resaltar horario seleccionado
+- [x] Task: Implementar visualización de horarios
+    - [x] Leer configuración actual desde ~/.config/blugon/gamma
+    - [x] Mostrar lista de horarios con navegación (↑↓)
+    - [x] Mostrar gamma actual y próxima transición
+    - [x] Resaltar horario seleccionado
 
-- [ ] Task: Implementar edición de horarios
-    - [ ] Dialog para editar hora (HH:MM)
-    - [ ] Dialog para editar temperatura (Kelvin)
-    - [ ] Validación de inputs (hora 0-23, temp 1000-20000)
-    - [ ] Vista previa de cambios antes de guardar
+- [x] Task: Implementar edición de horarios
+    - [x] Dialog para editar hora (HH:MM)
+    - [x] Dialog para editar temperatura (Kelvin)
+    - [x] Validación de inputs (hora 0-23, temp 1000-20000)
+    - [x] Vista previa de cambios antes de guardar
 
-- [ ] Task: Implementar agregar/eliminar horarios
-    - [ ] Dialog para agregar nuevo horario
-    - [ ] Confirmación antes de eliminar
-    - [ ] Ordenamiento automático por hora
-    - [ ] Prevención de duplicados
+- [x] Task: Implementar agregar/eliminar horarios
+    - [x] Dialog para agregar nuevo horario
+    - [x] Confirmación antes de eliminar
+    - [x] Ordenamiento automático por hora
+    - [x] Prevención de duplicados
 
-- [ ] Task: Implementar guardado y salida
-    - [ ] Guardar cambios a ~/.config/blugon/gamma
-    - [ ] Confirmación si hay cambios sin guardar
-    - [ ] Mensaje de éxito después de guardar
-    - [ ] Atajos: 's' guardar, 'q' salir, 'h' ayuda
+- [x] Task: Implementar guardado y salida
+    - [x] Guardar cambios a ~/.config/blugon/gamma
+    - [x] Confirmación si hay cambios sin guardar
+    - [x] Mensaje de éxito después de guardar
+    - [x] Atajos: 's' guardar, 'q' salir, 'h' ayuda
 
-- [ ] Task: Implementar características adicionales
-    - [ ] Mostrar estado del daemon (corriendo/detenido)
-    - [ ] Botón para iniciar/detener daemon
-    - [ ] About screen (tecla 'a')
-    - [ ] Help screen (tecla 'h')
-    - [ ] Colores y estilos apropiados
+- [x] Task: Implementar características adicionales
+    - [x] Mostrar estado del daemon (corriendo/detenido)
+    - [x] Botón para iniciar/detener daemon
+    - [x] About screen (tecla 'a')
+    - [x] Help screen (tecla 'h')
+    - [x] Colores y estilos apropiados
 
-- [ ] Task: Crear wrapper ejecutable blugon-lite-tui
-    - [ ] Script bash que llama a Python
-    - [ ] Verificar dependencias (python3, urwid)
-    - [ ] Manejo de errores si faltan dependencias
-    - [ ] Hacer ejecutable (chmod +x)
+- [x] Task: Crear wrapper ejecutable blugon-lite-tui
+    - [x] Script bash que llama a Python
+    - [x] Verificar dependencias (python3, urwid)
+    - [x] Manejo de errores si faltan dependencias
+    - [x] Hacer ejecutable (chmod +x)
 
-- [ ] Task: Conductor - User Manual Verification 'TUI con urwid' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'TUI con urwid' (Protocol in workflow.md)
 
 ---
 
-## Fase 3: Configuraciones Predefinidas [checkpoint: ]
+## Fase 3: Configuraciones Predefinidas [checkpoint: ecd050e]
 
-- [ ] Task: Crear config office/gamma
-    - [ ] Horario típico oficina (9:00-18:00)
-    - [ ] 5-6 puntos de transición
-    - [ ] Comentarios específicos para este perfil
+- [x] Task: Crear config office/gamma
+    - [x] Horario típico oficina (9:00-18:00)
+    - [x] 5-6 puntos de transición
+    - [x] Comentarios específicos para este perfil
 
-- [ ] Task: Crear config student/gamma
-    - [ ] Horarios extendidos (estudiante)
-    - [ ] Más horas de luz normal
-    - [ ] Transición más tarde en la noche
+- [x] Task: Crear config student/gamma
+    - [x] Horarios extendidos (estudiante)
+    - [x] Más horas de luz normal
+    - [x] Transición más tarde en la noche
 
-- [ ] Task: Crear config night-owl/gamma
-    - [ ] Para usuarios nocturnos
-    - [ ] Luz normal hasta tarde
-    - [ ] Transición más tarde
+- [x] Task: Crear config night-owl/gamma
+    - [x] Para usuarios nocturnos
+    - [x] Luz normal hasta tarde
+    - [x] Transición más tarde
 
-- [ ] Task: Crear config minimal/gamma
-    - [ ] Solo 3 puntos: día, tarde, noche
-    - [ ] Simple y fácil de entender
-    - [ ] Ideal para usuarios nuevos
+- [x] Task: Crear config minimal/gamma
+    - [x] Solo 3 puntos: día, tarde, noche
+    - [x] Simple y fácil de entender
+    - [x] Ideal para usuarios nuevos
 
-- [ ] Task: Actualizar Makefile
-    - [ ] Incluir nuevas configs en install
-    - [ ] Actualizar rutas de instalación
+- [x] Task: Actualizar Makefile
+    - [x] Incluir nuevas configs en install
+    - [x] Actualizar rutas de instalación
 
-- [ ] Task: Conductor - User Manual Verification 'Configuraciones Predefinidas' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Configuraciones Predefinidas' (Protocol in workflow.md)
 
 ---
 
