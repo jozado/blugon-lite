@@ -73,12 +73,15 @@ class ThemeSelectorModal:
             return
         # Enter selecciona el botón enfocado
         elif key == 'enter':
-            widget = self.body.get_focus()[0]
-            if isinstance(widget, urwid.AttrMap):
-                widget = widget.original_widget
-            if isinstance(widget, urwid.Button):
+            # Obtener el widget enfocado usando focus_position
+            focus_pos = self.body.focus_position
+            focus_widget = self.body.contents[focus_pos][0]
+            
+            if isinstance(focus_widget, urwid.AttrMap):
+                focus_widget = focus_widget.original_widget
+            if isinstance(focus_widget, urwid.Button):
                 # Simular click
-                widget._emit('click')
+                focus_widget._emit('click')
             return
     
     def select_theme(self, theme_id):
