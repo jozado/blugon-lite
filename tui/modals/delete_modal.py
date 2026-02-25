@@ -23,6 +23,9 @@ class DeleteConfirmModal:
         self.index = index
         self.schedule = schedule
         self.body = None
+        
+        # Registrar este modal como el activo
+        self.app.input_handler.set_modal(self)
     
     def build_body(self):
         """Construir el cuerpo del modal."""
@@ -83,6 +86,7 @@ class DeleteConfirmModal:
             self.app.selected_index = max(0, len(self.app.schedules) - 1)
         self.app.refresh_schedule_list()
         self.app.show_message("Horario eliminado", 'success')
+        self.app.input_handler.clear_modal()
         self.app.modal_open = False
         self.app.delete_confirm_open = False
         self.app.loop.widget = self.app.main_frame
@@ -91,6 +95,7 @@ class DeleteConfirmModal:
     
     def cancel(self):
         """Cancelar eliminación."""
+        self.app.input_handler.clear_modal()
         self.app.delete_confirm_open = False
         self.app.modal_open = False
         self.app.loop.widget = self.app.main_frame

@@ -27,6 +27,20 @@ class InputHandler:
             app: Referencia a la aplicación BlugonLiteTUI principal
         """
         self.app = app
+        self.current_modal = None  # Modal activo actual
+    
+    def set_modal(self, modal):
+        """
+        Establecer el modal activo.
+        
+        Args:
+            modal: El modal que está actualmente abierto
+        """
+        self.current_modal = modal
+    
+    def clear_modal(self):
+        """Limpiar la referencia al modal."""
+        self.current_modal = None
     
     def create_input_filter(self):
         """
@@ -47,14 +61,16 @@ class InputHandler:
             if hasattr(self.app, 'modal_open') and self.app.modal_open:
                 for key in keys:
                     if key in ('esc', 'escape'):
-                        # ESC cierra el modal
-                        self.app.handle_modal_input(key)
+                        # ESC cierra el modal - delegar al modal actual
+                        if self.current_modal:
+                            self.current_modal.handle_input(key)
                     else:
-                        # Todas las demás teclas van al handler del modal
-                        self.app.handle_modal_input(key)
+                        # Todas las demás teclas van al modal actual
+                        if self.current_modal:
+                            self.current_modal.handle_input(key)
                 # Consumir TODAS las teclas (no pasar ninguna al widget)
                 return []
-            
+
             # Pantalla principal: consumir flechas para navegación
             for key in keys:
                 if key in ('up', 'cursor up'):
@@ -63,10 +79,10 @@ class InputHandler:
                 elif key in ('down', 'cursor down'):
                     self.app.on_navigate_down()
                     return []
-            
+
             # Pasar otras teclas al handle_input normal
             return keys
-        
+
         return input_filter
     
     def handle_modal_input(self, key):

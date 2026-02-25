@@ -397,6 +397,15 @@ class BlugonLiteTUI:
         self.modal_open = False
         self.loop.widget = self.main_frame
 
+    def handle_modal_input(self, key):
+        """
+        Delegar manejo de input del modal al input_handler.
+        
+        Args:
+            key: Tecla presionada
+        """
+        self.input_handler.handle_modal_input(key)
+
     # =========================================================================
     # Métodos de edición (usan EditScheduleModal)
     # =========================================================================

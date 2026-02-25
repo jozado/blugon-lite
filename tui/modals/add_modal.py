@@ -20,6 +20,9 @@ class AddScheduleModal:
         """
         self.app = app
         
+        # Registrar este modal como el activo
+        self.app.input_handler.set_modal(self)
+        
         # Inicializar valores de agregado
         self.app.add_hour = 12
         self.app.add_minute = 0
@@ -114,7 +117,9 @@ class AddScheduleModal:
         Returns:
             bool: True si se consumió la tecla
         """
-        return self.app.input_handler.handle_modal_input(key)
+        # Delegar al input_handler que tiene la lógica de procesamiento
+        self.app.input_handler.handle_modal_input(key)
+        return True
     
     def save(self):
         """Guardar el nuevo horario."""
@@ -138,6 +143,7 @@ class AddScheduleModal:
             return
         
         self._cleanup()
+        self.app.input_handler.clear_modal()
         self.app.modal_open = False
         self.app.loop.widget = self.app.main_frame
         self.app.loop.draw_screen()
@@ -146,6 +152,7 @@ class AddScheduleModal:
     def cancel(self):
         """Cancelar el agregado."""
         self._cleanup()
+        self.app.input_handler.clear_modal()
         self.app.modal_open = False
         self.app.loop.widget = self.app.main_frame
         self.app.loop.draw_screen()

@@ -25,6 +25,9 @@ class EditScheduleModal:
         self.index = index
         self.schedule = schedule
         
+        # Registrar este modal como el activo
+        self.app.input_handler.set_modal(self)
+        
         # Inicializar valores de edición
         self.app.edit_index = index
         self.app.edit_hour_val = schedule['hour']
@@ -120,7 +123,9 @@ class EditScheduleModal:
         Returns:
             bool: True si se consumió la tecla
         """
-        return self.app.input_handler.handle_modal_input(key)
+        # Delegar al input_handler que tiene la lógica de procesamiento
+        self.app.input_handler.handle_modal_input(key)
+        return True
     
     def save(self):
         """Guardar los cambios."""
@@ -144,6 +149,7 @@ class EditScheduleModal:
             return
         
         self._cleanup()
+        self.app.input_handler.clear_modal()
         self.app.modal_open = False
         self.app.loop.widget = self.app.main_frame
         self.app.loop.draw_screen()
@@ -152,6 +158,7 @@ class EditScheduleModal:
     def cancel(self):
         """Cancelar la edición."""
         self._cleanup()
+        self.app.input_handler.clear_modal()
         self.app.modal_open = False
         self.app.loop.widget = self.app.main_frame
         self.app.loop.draw_screen()
