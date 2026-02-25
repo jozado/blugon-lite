@@ -29,8 +29,10 @@ class ThemeSelectorModal:
     def build_body(self):
         """Construir el cuerpo del modal."""
         theme_buttons = []
-        for idx, (theme_id, (theme_name, _)) in enumerate(THEMES.items()):
-            btn = urwid.Button(theme_name, lambda b, tid=theme_id: self.select_theme(tid))
+        for idx, (theme_id, (theme_name, palette)) in enumerate(THEMES.items()):
+            # Marcar tema actual con asterisco
+            display_name = f"● {theme_name}" if theme_id == self.app.current_theme else f"  {theme_name}"
+            btn = urwid.Button(display_name, lambda b, tid=theme_id: self.select_theme(tid))
             theme_buttons.append(urwid.AttrMap(btn, 'default', 'selected'))
         
         self.body = urwid.Pile([
@@ -89,9 +91,12 @@ class ThemeSelectorModal:
         self.app.theme_selector_open = False
         self.app.current_modal = None
         if theme_id in THEMES:
-            self.app.loop.screen.register_palette(THEMES[theme_id][1])
-            self.app.current_theme = theme_id
-            self.app.show_message(f"Tema cambiado a {theme_id}", 'success')
+            try:
+                self.app.loop.screen.register_palette(THEMES[theme_id][1])
+                self.app.current_theme = theme_id
+                self.app.show_message(f"Tema cambiado a {theme_id}", 'success')
+            except Exception as e:
+                self.app.show_message(f"Error al aplicar tema: {e}", 'error')
         self.app.modal_open = False
         self.app.loop.widget = self.app.main_frame
         self.app.loop.draw_screen()
