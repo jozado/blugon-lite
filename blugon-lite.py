@@ -22,7 +22,7 @@ MAKE_INSTALL_PREFIX = '/usr'
 DISPLAY = getenv('DISPLAY')
 ONCE = False
 INTERVAL = 120
-CONFIG_DIR = getenv('XDG_CONFIG_HOME') or getenv('HOME') + '/.config'
+CONFIG_DIR = getenv('XDG_CONFIG_HOME') or (getenv('HOME') or '/root') + '/.config'
 CONFIG_DIR += '/blugon'
 BACKEND = 'scg'
 

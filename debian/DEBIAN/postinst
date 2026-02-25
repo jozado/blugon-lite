@@ -3,34 +3,41 @@
 
 case "$1" in
     configure)
-        # Crear directorio de configuración del usuario si no existe
+        # Copiar autostart a /etc/xdg/autostart/ para autoinicio global (XFCE, GNOME, KDE)
+        if [ -d /etc/xdg ] && [ -d /etc/xdg/autostart ]; then
+            cp /usr/share/applications/blugon-lite-autostart.desktop /etc/xdg/autostart/blugon-lite.desktop 2>/dev/null || true
+            chmod 644 /etc/xdg/autostart/blugon-lite.desktop 2>/dev/null || true
+            echo "  Autoinicio: El daemon se iniciará automáticamente al iniciar sesión"
+        fi
+
+        # Copiar autostart de XDG a cada usuario si no existe
         if [ -d /home ]; then
             for user_home in /home/*; do
                 if [ -d "$user_home" ] && [ "$(basename "$user_home")" != "debian" ]; then
                     user=$(basename "$user_home")
                     config_dir="$user_home/.config/blugon"
-                    
+
                     # Crear directorio de configuración
                     if [ ! -d "$config_dir" ]; then
                         mkdir -p "$config_dir" 2>/dev/null || true
                         chown $user:$user "$config_dir" 2>/dev/null || true
                         chmod 755 "$config_dir" 2>/dev/null || true
                     fi
-                    
+
                     # Copiar configuración por defecto si no existe
                     if [ ! -f "$config_dir/gamma" ]; then
                         cp /usr/share/blugon-lite/configs/evening/gamma "$config_dir/gamma" 2>/dev/null || true
                         chown $user:$user "$config_dir/gamma" 2>/dev/null || true
                         chmod 644 "$config_dir/gamma" 2>/dev/null || true
                     fi
-                    
+
                     # Copiar autostart de XDG si no existe
                     autostart_dir="$user_home/.config/autostart"
                     if [ ! -d "$autostart_dir" ]; then
                         mkdir -p "$autostart_dir" 2>/dev/null || true
                         chown $user:$user "$autostart_dir" 2>/dev/null || true
                     fi
-                    
+
                     if [ ! -f "$autostart_dir/blugon-lite.desktop" ]; then
                         cp /usr/share/applications/blugon-lite-autostart.desktop "$autostart_dir/blugon-lite.desktop" 2>/dev/null || true
                         chown $user:$user "$autostart_dir/blugon-lite.desktop" 2>/dev/null || true
@@ -38,38 +45,25 @@ case "$1" in
                 fi
             done
         fi
-        
-        # Habilitar servicio systemd si está disponible (sin forzar)
-        if command -v systemctl > /dev/null 2>&1; then
-            systemctl daemon-reload 2>/dev/null || true
-        fi
-        
-        # Habilitar init script SysV si systemd no está disponible
-        if ! command -v systemctl > /dev/null 2>&1; then
-            if [ -x /usr/sbin/update-rc.d ]; then
-                update-rc.d blugon-lite defaults 2>/dev/null || true
-            fi
-        fi
-        
+
+        # Nota: El servicio systemd no se recomienda para daemons que necesitan X11
+        # El autoinicio vía .desktop es el método preferido
+
         # Actualizar caché de iconos y desktop (sin fallar)
         if [ -x /usr/bin/update-icon-caches ]; then
             update-icon-caches /usr/share/icons/hicolor 2>/dev/null || true
         fi
-        
+
         if [ -x /usr/bin/update-desktop-database ]; then
             update-desktop-database /usr/share/applications 2>/dev/null || true
         fi
-        
+
         echo ""
         echo "blugon-lite instalado exitosamente."
         echo ""
         echo "Para comenzar:"
         echo "  1. Ejecuta 'blugon-lite-tui' para configurar horarios"
         echo "  2. O ejecuta 'blugon-lite --once' para aplicar el filtro"
-        echo ""
-        echo "Para iniciar automáticamente al boot:"
-        echo "  Systemd: sudo systemctl enable blugon-lite"
-        echo "  SysV:    sudo update-rc.d blugon-lite defaults"
         echo ""
         ;;
     

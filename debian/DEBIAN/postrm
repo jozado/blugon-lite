@@ -18,6 +18,12 @@ case "$1" in
             update-desktop-database /usr/share/applications >> "$LOGFILE" 2>&1 || echo "update-desktop-database falló" >> "$LOGFILE"
         fi
 
+        # Limpiar archivo de autoinicio global
+        if [ -f /etc/xdg/autostart/blugon-lite.desktop ]; then
+            rm -f /etc/xdg/autostart/blugon-lite.desktop >> "$LOGFILE" 2>&1 || true
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado /etc/xdg/autostart/blugon-lite.desktop" >> "$LOGFILE"
+        fi
+
         # Limpiar configs de usuario SOLO si se usa --purge con fuerza
         # No tocar ~/.config del usuario por defecto
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] purge completado" >> "$LOGFILE"
