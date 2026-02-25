@@ -294,7 +294,8 @@ class InputHandler:
             bool: True si el valor cambió
         """
         is_edit = hasattr(self.app, 'edit_index')
-        
+        is_add = hasattr(self.app, 'add_hour')
+
         if key in ('backspace', 'ctrl h'):
             if is_edit and hasattr(self.app, 'edit_label_val'):
                 self.app.edit_label_val = self.app.edit_label_val[:-1]
@@ -318,7 +319,7 @@ class InputHandler:
                 if len(self.app.add_label_val) < 20:
                     self.app.add_label_val += key
                     return True
-        
+
         return False
     
     def _update_modal(self):

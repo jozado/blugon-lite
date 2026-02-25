@@ -52,11 +52,28 @@ class BlugonLiteTUI:
 
     def load_config(self):
         """Cargar configuración gamma desde archivo o defaults."""
-        self.schedules = read_gamma_file(CONFIG_FILE)
-        if not self.schedules:
-            self.schedules = read_gamma_file(SYSTEM_CONFIG_FILE)
-        if not self.schedules:
-            self.schedules = get_default_schedules()
+        # Debug: log de carga
+        with open('/tmp/tui_load.log', 'w') as f:
+            f.write(f'CONFIG_FILE: {CONFIG_FILE}\n')
+            f.write(f'SYSTEM_CONFIG_FILE: {SYSTEM_CONFIG_FILE}\n')
+            
+            # Intentar leer archivo de usuario
+            schedules = read_gamma_file(CONFIG_FILE)
+            f.write(f'User config schedules: {len(schedules)}\n')
+            if schedules:
+                for s in schedules:
+                    f.write(f'  {s["time_str"]} - {s["temp_str"]}\n')
+            
+            if not schedules:
+                schedules = read_gamma_file(SYSTEM_CONFIG_FILE)
+                f.write(f'System config schedules: {len(schedules)}\n')
+            
+            if not schedules:
+                schedules = get_default_schedules()
+                f.write(f'Default schedules: {len(schedules)}\n')
+            
+            self.schedules = schedules
+            f.write(f'Final schedules: {len(self.schedules)}\n')
 
     def create_widgets(self):
         """Crear widgets principales de la UI."""
@@ -550,7 +567,7 @@ class BlugonLiteTUI:
             self.add_hour = 12
             self.add_minute = 0
             self.add_temp = 6500
-            self.add_label_val = "Mañana"
+            self.add_label_val = ""  # Etiqueta vacía por defecto
 
         if not hasattr(self, 'add_field_selected'):
             self.add_field_selected = 0
