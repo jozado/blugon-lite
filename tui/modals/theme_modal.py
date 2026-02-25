@@ -35,12 +35,16 @@ class ThemeSelectorModal:
             btn = urwid.Button(display_name, lambda b, tid=theme_id: self.select_theme(tid))
             theme_buttons.append(urwid.AttrMap(btn, 'default', 'selected'))
         
+        # Botón Cancelar también con AttrMap
+        cancel_btn = urwid.Button("Cancelar", lambda b: self.cancel())
+        cancel_attr = urwid.AttrMap(cancel_btn, 'default', 'selected')
+        
         self.body = urwid.Pile([
             urwid.AttrMap(urwid.Text("Seleccionar Tema"), 'header'),
             urwid.Divider(),
         ] + theme_buttons + [
             urwid.Divider(),
-            urwid.Button("Cancelar", lambda b: self.cancel()),
+            cancel_attr,
         ])
         self.body.focus_position = 2  # Primer botón de tema
         
@@ -64,23 +68,43 @@ class ThemeSelectorModal:
         focus_index = self.body.focus_position
         total_items = len(self.body.contents)
         
-        # Navegación con flechas
+        # Navegación con flechas (cíclica)
         if key in ('up', 'cursor up'):
             if focus_index > 2:  # Después del header y divider
                 self.body.focus_position = focus_index - 1
+            else:
+                self.body.focus_position = total_items - 1  # Ir al último (Cancelar)
             return
         elif key in ('down', 'cursor down'):
             if focus_index < total_items - 1:
                 self.body.focus_position = focus_index + 1
+            else:
+                self.body.focus_position = 2  # Volver al primer tema
+            return
+        # Tab para navegar hacia adelante
+        elif key == 'tab':
+            if focus_index < total_items - 1:
+                self.body.focus_position = focus_index + 1
+            else:
+                self.body.focus_position = 2  # Volver al primer tema
+            return
+        # Shift+Tab para navegar hacia atrás
+        elif key == 'shift tab':
+            if focus_index > 2:
+                self.body.focus_position = focus_index - 1
+            else:
+                self.body.focus_position = total_items - 1  # Ir al último (Cancelar)
             return
         # Enter selecciona el botón enfocado
         elif key == 'enter':
-            # Obtener el widget enfocado usando focus_position
+            # Obtener el widget enfocado
             focus_pos = self.body.focus_position
             focus_widget = self.body.contents[focus_pos][0]
             
-            if isinstance(focus_widget, urwid.AttrMap):
+            # Desenvolver AttrMap si es necesario
+            while isinstance(focus_widget, urwid.AttrMap):
                 focus_widget = focus_widget.original_widget
+            
             if isinstance(focus_widget, urwid.Button):
                 # Simular click
                 focus_widget._emit('click')
