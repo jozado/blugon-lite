@@ -4,89 +4,89 @@
 
 ---
 
-## Fase 1: Análisis y Diagnóstico [checkpoint: ]
+## Fase 1: Análisis y Diagnóstico [checkpoint: f7fb942]
 
-- [ ] Task: Analizar el flujo actual de entrada de teclas
-    - [ ] Revisar input_filter en app.py
-    - [ ] Revisar handle_modal_input en app.py
-    - [ ] Revisar ModalOverlay.keypress
-    - [ ] Identificar dónde se pierden las teclas
+- [x] Task: Analizar el flujo actual de entrada de teclas
+    - [x] Revisar input_filter en app.py
+    - [x] Revisar handle_modal_input en app.py
+    - [x] Revisar ModalOverlay.keypress
+    - [x] Identificar dónde se pierden las teclas
 
-- [ ] Task: Identificar bugs específicos
-    - [ ] Por qué no funciona escritura de texto
-    - [ ] Por qué no funciona Enter en botones
-    - [ ] Por qué no funciona Backspace/Delete
+- [x] Task: Identificar bugs específicos
+    - [x] Por qué no funciona escritura de texto
+    - [x] Por qué no funciona Enter en botones
+    - [x] Por qué no funciona Backspace/Delete
 
-- [ ] Task: Documentar diagnóstico en notas del track
-
----
-
-## Fase 2: Reparar input_filter [checkpoint: ]
-
-- [ ] Task: Refactorizar input_filter para detectar modal
-    - [ ] Verificar si modal_open es True
-    - [ ] Si modal está abierto, pasar todas las teclas
-    - [ ] Si modal está cerrado, usar comportamiento normal
-
-- [ ] Task: Asegurar que ESC siempre funcione
-    - [ ] ESC debe cerrar modal desde cualquier lugar
-    - [ ] ESC debe manejarse antes que otros inputs
-
-- [ ] Task: Testear input_filter corregido
-    - [ ] Abrir modal con 'e'
-    - [ ] Verificar que teclas llegan al modal
-    - [ ] Verificar que navegación principal no se rompe
+- [x] Task: Documentar diagnóstico en notas del track
 
 ---
 
-## Fase 3: Reparar handle_modal_input [checkpoint: ]
+## Fase 2: Reparar input_filter [checkpoint: f7fb942]
 
-- [ ] Task: Manejar caracteres imprimibles para etiqueta
-    - [ ] Detectar si key es carácter imprimible (len == 1)
-    - [ ] Agregar carácter al valor de etiqueta
-    - [ ] Limitar a 20 caracteres máximo
+- [x] Task: Refactorizar input_filter para detectar modal
+    - [x] Verificar si modal_open es True
+    - [x] Si modal está abierto, pasar todas las teclas
+    - [x] Si modal está cerrado, usar comportamiento normal
 
-- [ ] Task: Manejar Backspace correctamente
-    - [ ] Detectar 'backspace' y 'ctrl h'
-    - [ ] Borrar último carácter
-    - [ ] Manejar string vacío
+- [x] Task: Asegurar que ESC siempre funcione
+    - [x] ESC debe cerrar modal desde cualquier lugar
+    - [x] ESC debe manejarse antes que otros inputs
 
-- [ ] Task: Manejar Delete correctamente
-    - [ ] Detectar 'delete' y 'ctrl d'
-    - [ ] Borrar todo el contenido
-    - [ ] Resetear a string vacío
-
-- [ ] Task: Manejar Enter para botones
-    - [ ] Si campo seleccionado es 4 (Guardar), ejecutar save
-    - [ ] Si campo seleccionado es 5 (Cancelar), ejecutar cancel
-    - [ ] Retornar después de ejecutar para evitar redibujado extra
-
-- [ ] Task: Mejorar navegación entre campos
-    - [ ] Up/Down navegan entre campos (0-5)
-    - [ ] Left/Right modifican valores (campos 0-2)
-    - [ ] Tab va directo a botón Guardar
-    - [ ] Shift+Tab va hacia atrás
+- [x] Task: Testear input_filter corregido
+    - [x] Abrir modal con 'e'
+    - [x] Verificar que teclas llegan al modal
+    - [x] Verificar que navegación principal no se rompe
 
 ---
 
-## Fase 4: Limpieza y Refactorización [checkpoint: ]
+## Fase 3: Reparar handle_modal_input [checkpoint: f7fb942]
 
-- [ ] Task: Eliminar logs de debug
-    - [ ] Remover escritura a /tmp/tui_modal.log
-    - [ ] Remover escritura a /tmp/tui_label.log
+- [x] Task: Manejar caracteres imprimibles para etiqueta
+    - [x] Detectar si key es carácter imprimible (len == 1)
+    - [x] Agregar carácter al valor de etiqueta
+    - [x] Limitar a 20 caracteres máximo
 
-- [ ] Task: Refactorizar código duplicado
-    - [ ] Unificar lógica edit/add donde sea posible
-    - [ ] Extraer funciones helper si es necesario
+- [x] Task: Manejar Backspace correctamente
+    - [x] Detectar 'backspace' y 'ctrl h'
+    - [x] Borrar último carácter
+    - [x] Manejar string vacío
 
-- [ ] Task: Agregar docstrings
-    - [ ] Documentar input_filter
-    - [ ] Documentar handle_modal_input
-    - [ ] Documentar funciones auxiliares
+- [x] Task: Manejar Delete correctamente
+    - [x] Detectar 'delete' y 'ctrl d'
+    - [x] Borrar todo el contenido
+    - [x] Resetear a string vacío
+
+- [x] Task: Manejar Enter para botones
+    - [x] Si campo seleccionado es 4 (Guardar), ejecutar save
+    - [x] Si campo seleccionado es 5 (Cancelar), ejecutar cancel
+    - [x] Retornar después de ejecutar para evitar redibujado extra
+
+- [x] Task: Mejorar navegación entre campos
+    - [x] Up/Down navegan entre campos (0-5)
+    - [x] Left/Right modifican valores (campos 0-2)
+    - [x] Tab va directo a botón Guardar
+    - [x] Shift+Tab va hacia atrás
 
 ---
 
-## Fase 5: Testing Manual [checkpoint: ]
+## Fase 4: Limpieza y Refactorización [checkpoint: f7fb942]
+
+- [x] Task: Eliminar logs de debug
+    - [x] Remover escritura a /tmp/tui_modal.log
+    - [x] Remover escritura a /tmp/tui_label.log
+
+- [x] Task: Refactorizar código duplicado
+    - [x] Unificar lógica edit/add donde sea posible
+    - [x] Extraer funciones helper si es necesario
+
+- [x] Task: Agregar docstrings
+    - [x] Documentar input_filter
+    - [x] Documentar handle_modal_input
+    - [x] Documentar funciones auxiliares
+
+---
+
+## Fase 5: Testing Manual [checkpoint: f7fb942]
 
 - [ ] Task: Probar edición de etiqueta
     - [ ] Escribir texto "Mi Horario"
