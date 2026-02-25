@@ -1,217 +1,232 @@
 # blugon-lite
 
-Blue Light Filter for X Window System - **Minimalist Version**
+**Blue Light Filter for X Window System** - Una versión ligera y moderna del filtro de luz azul.
 
-A lightweight fork of [blugon](https://github.com/jumper149/blugon) that reduces RAM consumption and code complexity while maintaining core functionality.
+![Versión](https://img.shields.io/badge/versión-1.0.0--lite-blue)
+![Licencia](https://img.shields.io/badge/licencia-MIT-green)
 
-## Features
+---
 
-- ✅ Automatic blue light filtering based on time of day
-- ✅ Customizable gamma/temperature schedules
-- ✅ Two backends: scg (Xrandr) and xgamma
-- ✅ Daemon mode or one-time application
-- ✅ **< 8MB RAM** consumption (vs ~15MB original)
-- ✅ **202 lines of code** (vs ~450 original)
+## 📖 ¿Qué es blugon-lite?
 
-## Differences from blugon
+blugon-lite es un filtro de luz azul para X Window System que ajusta automáticamente la temperatura de color de tu pantalla según la hora del día. Reduce la luz azul durante la noche para mejorar la calidad del sueño.
 
-### Removed Features
+### ✨ Características
 
-| Feature | Reason |
-|---------|--------|
-| `--fade` | Smooth startup transition (unnecessary) |
-| `--simulation` | Day simulation mode (debug only) |
-| `--waitforx` | Wait for X server (edge case) |
-| `--readcurrent` / `--setcurrent` | Current temperature file (complexity) |
-| `--verbose` | Verbose logging (debug only) |
-| `--printconfig` | Print default config (unnecessary) |
-| TTY backend | Virtual console support (not needed for X) |
+- **🌅 Horarios personalizables** - Configura múltiples puntos de temperatura durante el día
+- **🎨 TUI intuitivo** - Interfaz de texto tipo htop para configuración fácil
+- **💾 Auto-guardado** - Los cambios se persisten automáticamente
+- **🎯 Ligero** - Menos de 8MB de RAM, código optimizado
+- **📦 Paquete .deb** - Instalación fácil en Debian/Ubuntu
+- **🔄 Daemon automático** - Ajusta la pantalla cada 2 minutos
 
-### Maintained Features
+### 🆚 Diferencias con blugon original
 
-- All core gamma filtering functionality
-- Time-based interpolation
-- Custom configuration files
-- Backend selection (scg/xgamma)
-- Daemon mode with configurable interval
+| Característica | blugon | blugon-lite |
+|---------------|--------|-------------|
+| Líneas de código | ~450 | ~240 |
+| Consumo RAM | ~15MB | ~8MB |
+| TUI incluido | ❌ | ✅ |
+| Paquete .deb | ❌ | ✅ |
+| Etiquetas personalizadas | ❌ | ✅ |
 
-## Installation
+---
 
-### Dependencies
+## 📦 Instalación
 
-- **Python 3.6+**
-- **libx11** and **libxrandr** development files
-- **gcc** (for building scg backend)
-- **xorg-xgamma** (optional, for xgamma backend)
-
-### From Source
+### Desde paquete .deb (Recomendado)
 
 ```bash
-# Build
-make
+# Descargar la última versión
+wget https://github.com/tu-usuario/blugon-lite/releases/download/v1.0.0/blugon-lite_1.0.0-lite_amd64.deb
 
-# Install (as root)
+# Instalar (las dependencias se resuelven automáticamente)
+sudo apt install ./blugon-lite_1.0.0-lite_amd64.deb
+```
+
+### Desde código fuente
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/tu-usuario/blugon-lite.git
+cd blugon-lite
+
+# Instalar dependencias
+sudo apt install python3-urwid libxrandr-dev libx11-dev
+
+# Compilar backend
+cd backends/scg && make build && cd ../..
+
+# Instalar
 sudo make install
 ```
 
-### Arch Linux
+---
 
-Available via AUR (coming soon).
+## 🚀 Uso
 
-## Usage
-
-### Basic Usage
+### Abrir el TUI (Recomendado)
 
 ```bash
-# Run as daemon (updates every 120 seconds)
-blugon-lite
+blugon-lite-tui
+```
 
-# Run once and exit
+El TUI te permite:
+- 👁️ Ver horarios configurados y próxima transición
+- ✏️ Editar horarios existentes
+- ➕ Agregar nuevos horarios
+- 🗑️ Eliminar horarios
+- 🎨 Cambiar tema de colores
+- 💾 Guardar configuración
+
+### Comandos CLI
+
+```bash
+# Aplicar una vez y salir
 blugon-lite --once
 
-# Run in background
-(blugon-lite &)
+# Ejecutar como daemon (ajusta cada 120 segundos)
+blugon-lite --interval 120
 
-# Stop
-killall blugon-lite
-```
-
-### Options
-
-```
--v, --version           Print version and exit
--o, --once              Apply configuration once and exit
--i, --interval [secs]   Set refresh interval (default: 120)
--c, --configdir [path]  Set configuration directory
--b, --backend [name]    Set backend: scg or xgamma (default: scg)
-```
-
-### Examples
-
-```bash
-# Use xgamma backend instead of scg
+# Usar backend específico
 blugon-lite --backend xgamma
 
-# Refresh every 60 seconds
-blugon-lite --interval 60
-
-# Use custom configuration directory
-blugon-lite --configdir ~/.config/blugon-custom
-
-# Apply current settings once (useful for testing)
-blugon-lite --once
+# Mostrar versión
+blugon-lite --version
 ```
 
-## Configuration
+### Opciones de línea de comandos
 
-### Setup
+| Opción | Descripción |
+|--------|-------------|
+| `-o, --once` | Aplicar una vez y salir |
+| `-i, --interval [segundos]` | Intervalo de actualización (default: 120) |
+| `-c, --configdir [ruta]` | Directorio de configuración |
+| `-b, --backend [scg\|xgamma]` | Backend a usar |
+| `-v, --version` | Mostrar versión |
 
-```bash
-# Create configuration directory
-mkdir -p ~/.config/blugon
+---
 
-# Copy evening schedule (included)
-cp /usr/share/blugon-lite/configs/evening/gamma ~/.config/blugon/gamma
+## ⚙️ Configuración
+
+### Archivo de configuración
+
+Los horarios se guardan en `~/.config/blugon/gamma`:
+
+```
+# Formato: hora minuto temperatura [etiqueta]
+8 0 6500 Mañana
+17 0 4500 Atardecer
+21 0 3000 Noche
+0 0 2000 Madrugada
 ```
 
-### Gamma File Format
+### Temperaturas recomendadas
 
-Location: `~/.config/blugon/gamma`
+| Temperatura | Descripción | Uso |
+|-------------|-------------|-----|
+| 6500K | Luz día normal | Productividad |
+| 4500K | Blanco cálido | Tarde |
+| 3000K | Luz cálida | Noche, reduce melatonina |
+| 2000K | Luz muy cálida | Pre-sueño |
 
-Two formats supported:
+### Configuraciones predefinidas
 
-**Format 1: Temperature (Kelvin)**
+El paquete incluye configuraciones para diferentes perfiles:
+
+- **evening** - Horario estándar (17:00-08:00 noche)
+- **office** - Trabajador de oficina (9:00-18:00)
+- **student** - Estudiante (horarios extendidos)
+- **night-owl** - Usuario nocturno
+- **minimal** - Solo 3 puntos básicos
+
+---
+
+## 🎨 Temas del TUI
+
+El TUI incluye dos temas:
+
+- **dark** - Tema oscuro por defecto
+- **dracula** - Tema inspirado en Dracula
+
+Cambiar tema: Presionar `t` en el TUI.
+
+---
+
+## 🔧 Solución de problemas
+
+### El filtro no aplica cambios
+
+1. Verificar que X11 esté corriendo
+2. Probar con backend alternativo:
+   ```bash
+   blugon-lite --once --backend xgamma
+   ```
+
+### Error al iniciar el TUI
+
+1. Verificar que python3-urwid esté instalado:
+   ```bash
+   sudo apt install python3-urwid
+   ```
+
+### Los cambios no persisten
+
+1. Verificar permisos del archivo:
+   ```bash
+   ls -la ~/.config/blugon/gamma
+   ```
+2. El archivo debe ser editable por tu usuario
+
+---
+
+## 📁 Estructura del proyecto
+
 ```
-# hour minute temperature
-8 0 6500
-17 0 4500
-21 0 3000
-0 0 2000
-```
-
-**Format 2: RGB Gamma values (0.0 - 1.0)**
-```
-# hour minute red green blue
-8 0 1.0 1.0 1.0
-17 0 1.0 0.9 0.8
-21 0 1.0 0.8 0.6
-```
-
-### Example Schedule (Evening)
-
-The included `evening/gamma` provides:
-
-| Time | Temperature | Description |
-|------|-------------|-------------|
-| 08:00 | 6500K | Daylight (normal) |
-| 17:00 | 4500K | Evening transition |
-| 21:00 | 3000K | Warm evening |
-| 00:00 | 2000K | Night mode (minimal blue) |
-| 06:00 | 2500K | Early morning |
-
-## Systemd Service
-
-Create `~/.config/systemd/user/blugon-lite.service`:
-
-```ini
-[Unit]
-Description=Blue Light Filter (lite)
-After=graphical-session.target
-
-[Service]
-Type=simple
-ExecStart=%h/.local/bin/blugon-lite
-Restart=always
-
-[Install]
-WantedBy=default.target
-```
-
-Enable with:
-```bash
-systemctl --user enable blugon-lite.service
-systemctl --user start blugon-lite.service
-```
-
-## Performance
-
-| Metric | blugon | blugon-lite |
-|--------|--------|-------------|
-| Lines of code | ~450 | 202 |
-| RAM usage | ~15MB | < 8MB |
-| Features | Full | Core only |
-| Backends | 3 (scg, xgamma, tty) | 2 (scg, xgamma) |
-
-## Troubleshooting
-
-### "Config directory not found"
-
-Create the directory and copy a gamma file:
-```bash
-mkdir -p ~/.config/blugon
-cp /usr/share/blugon-lite/configs/evening/gamma ~/.config/blugon/gamma
-```
-
-### "Cannot open display"
-
-Ensure DISPLAY is set:
-```bash
-export DISPLAY=:0
-blugon-lite --once
+blugon-lite/
+├── blugon-lite.py          # Script principal CLI
+├── blugon-lite-tui         # Wrapper para TUI
+├── blugon-lite-tui.py      # Punto de entrada TUI
+├── backends/
+│   └── scg/
+│       ├── scg.c           # Backend C + Xrandr
+│       └── Makefile
+├── tui/
+│   ├── app.py              # Aplicación principal TUI
+│   ├── modals/             # Modales (edit, add, delete, theme)
+│   ├── widgets/            # Widgets personalizados
+│   ├── input_handler.py    # Manejo de input
+│   └── themes.py           # Temas de colores
+├── configs/                # Configuraciones predefinidas
+└── debian/                 # Empaquetado .deb
 ```
 
-### Backend fails
+---
 
-Try the alternative backend:
-```bash
-blugon-lite --backend xgamma --once
-```
+## 🤝 Contribuir
 
-## License
+1. Fork el repositorio
+2. Crear rama para feature (`git checkout -b feature/nueva-caracteristica`)
+3. Commit cambios (`git commit -m 'feat: agregar nueva característica'`)
+4. Push a la rama (`git push origin feature/nueva-caracteristica`)
+5. Abrir Pull Request
 
-Apache-2.0 (same as original blugon)
+---
 
-## Acknowledgments
+## 📄 Licencia
 
-- Original [blugon](https://github.com/jumper149/blugon) by jumper149
-- Temperature to RGB algorithm by [Tanner Helland](http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/)
+MIT License - ver archivo [LICENSE](LICENSE) para detalles.
+
+---
+
+## 🙏 Agradecimientos
+
+- Proyecto original [blugon](https://github.com/jumper149/blugon) de jumper149
+- Algoritmo de temperatura a gamma por [Tanner Helland](http://www.tannerhelland.com/4435/)
+
+---
+
+## 📬 Contacto
+
+- Issues: [GitHub Issues](https://github.com/tu-usuario/blugon-lite/issues)
+- Email: tu-email@ejemplo.com

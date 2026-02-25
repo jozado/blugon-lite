@@ -1,7 +1,7 @@
 .TH BLUGON-LITE 1 "February 2026" "blugon-lite 1.0.0-lite" "User Commands"
 
 .SH NAME
-blugon-lite \- Blue Light Filter for X Window System (minimalist version)
+blugon-lite \- Blue Light Filter for X Window System
 
 .SH SYNOPSIS
 .B blugon-lite
@@ -11,10 +11,33 @@ blugon-lite \- Blue Light Filter for X Window System (minimalist version)
 [\fB\-c\fR|\fB\-\-configdir\fR \fIPATH\fR]
 [\fB\-b\fR|\fB\-\-backend\fR \fIBACKEND\fR]
 
+.PP
+.B blugon-lite-tui
+
 .SH DESCRIPTION
 blugon-lite is a lightweight blue light filter for X Window System. It adjusts screen color temperature based on time of day, reducing blue light during evening hours to improve sleep quality.
 
-This is a minimalist fork of blugon, optimized for lower RAM consumption (< 8MB) and reduced code complexity (202 lines).
+.PP
+This is a minimalist fork of blugon, optimized for:
+.RS
+.IP \(bu 2
+Lower RAM consumption (< 8MB)
+.IP \(bu 2
+Reduced code complexity (~240 lines)
+.IP \(bu 2
+Interactive TUI for easy configuration
+.IP \(bu 2
+Automatic saving of changes
+.RE
+
+.SH COMMANDS
+.TP
+.B blugon-lite
+Main CLI command for applying the filter.
+
+.TP
+.B blugon-lite-tui
+Interactive Text User Interface for configuration.
 
 .SH OPTIONS
 .TP
@@ -42,12 +65,85 @@ Configuration files are read from ~/.config/blugon/
 
 .TP
 .B gamma
-Gamma/temperature schedule file. Format: "hour minute value" where value can be temperature (Kelvin) or RGB gamma values (0.0-1.0).
+Gamma/temperature schedule file. Format: "hour minute temperature [label]"
+
+.RS
+.IP \(bu 2
+hour: 0-23
+.IP \(bu 2
+minute: 0-59
+.IP \(bu 2
+temperature: 1000-20000 Kelvin
+.IP \(bu 2
+label: optional description (e.g., "Morning", "Night")
+.RE
+
+.PP
+Example:
+.RS
+.nf
+8 0 6500 Morning
+17 0 4500 Evening
+21 0 3000 Night
+0 0 2000 Deep Night
+.fi
+.RE
+
+.TP
+.B tui_config
+TUI settings file. Contains selected theme preference.
+
+.SH TUI USAGE
+The TUI provides an interactive interface for managing schedules:
+
+.TP
+.B e
+Edit selected schedule
+
+.TP
+.B a
+Add new schedule
+
+.TP
+.B d
+Delete selected schedule
+
+.TP
+.B t
+Change color theme
+
+.TP
+.B s
+Save configuration to file
+
+.TP
+.B q
+Quit (asks confirmation if unsaved changes)
+
+.TP
+.B ↑ ↓
+Navigate schedules
+
+.TP
+.B ← →
+Adjust values (hour/minute/temperature)
+
+.TP
+.B Tab
+Jump to action buttons
+
+.TP
+.B Enter
+Confirm action
+
+.TP
+.B Esc
+Cancel/Go back
 
 .SH EXAMPLES
 .TP
-Run as daemon:
-.B blugon-lite
+Run as daemon (refresh every 2 minutes):
+.B blugon-lite --interval 120
 
 .TP
 Apply once and exit:
@@ -55,51 +151,115 @@ Apply once and exit:
 
 .TP
 Use xgamma backend:
-.B blugon-lite --backend xgamma
+.B blugon-lite --once --backend xgamma
 
 .TP
-Custom refresh interval (60 seconds):
-.B blugon-lite --interval 60
+Open TUI:
+.B blugon-lite-tui
+
+.TP
+Run daemon in background:
+.B nohup blugon-lite --interval 120 > /tmp/blugon.log 2>&1 &
+
+.SH TEMPERATURE GUIDE
+Recommended temperature values:
+
+.TP
+.B 6500K
+Normal daylight - Productivity
+
+.TP
+.B 4500K
+Warm white - Afternoon transition
+
+.TP
+.B 3000K
+Warm light - Evening, reduces melatonin suppression
+
+.TP
+.B 2000K
+Very warm - Pre-sleep, minimal blue light
+
+.SH PRESET CONFIGURATIONS
+The package includes preset configurations:
+
+.TP
+.B evening
+Standard evening schedule (17:00-08:00 night mode)
+
+.TP
+.B office
+Office worker schedule (9:00-18:00)
+
+.TP
+.B student
+Extended study hours
+
+.TP
+.B night-owl
+Late night user schedule
+
+.TP
+.B minimal
+Simple 3-point schedule (day, evening, night)
 
 .SH FILES
 .TP
 .I ~/.config/blugon/gamma
-Gamma configuration file.
+User's gamma schedule configuration
 
 .TP
-.I /usr/share/blugon-lite/configs/evening/gamma
-Example evening schedule configuration.
+.I ~/.config/blugon/tui_config
+TUI theme settings
+
+.TP
+.I /usr/share/blugon-lite/configs/
+Preset configurations
+
+.TP
+.I /usr/lib/blugon-lite/scg
+SCG backend binary (C + Xrandr)
 
 .SH BACKENDS
 .TP
 .B scg
-Uses Xrandr extension for gamma control. Requires libxrandr. Best quality.
+Primary backend using Xrandr. More accurate, requires compiled C binary.
 
 .TP
 .B xgamma
-Uses xorg-xgamma command. More compatible but requires external dependency.
+Fallback backend using xorg-xgamma command. Less accurate but more compatible.
 
 .SH EXIT STATUS
 .TP
 .B 0
-Success.
-
-.TP
-.B 12
-Cannot open display (scg backend only).
+Success
 
 .TP
 .B 1
-General error.
+Error (configuration not found, backend failed, etc.)
 
-.SH SEE ALSO
-redshift(1), sct(1), xgamma(1)
+.SH DIAGNOSTICS
+.TP
+.B "Error: Invalid gamma line"
+Configuration file has invalid format. Check hour/minute/temperature values.
+
+.TP
+.B "Error: Backend not found"
+SCG binary not installed or not compiled. Try --backend xgamma.
+
+.TP
+.B "Error: Cannot open display"
+X11 display not available. Make sure you're running in X session.
 
 .SH BUGS
-Report bugs at https://github.com/jumper149/blugon/issues
+Report bugs at: https://github.com/tu-usuario/blugon-lite/issues
 
 .SH AUTHOR
 blugon-lite is a fork of blugon by jumper149.
 
+.SH "SEE ALSO"
+.BR xgamma (1),
+.BR xrandr (1)
+
 .SH LICENSE
-Apache-2.0
+MIT License. See LICENSE file for details.
