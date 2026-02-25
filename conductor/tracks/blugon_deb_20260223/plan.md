@@ -107,6 +107,8 @@
 
 *Solución:* Se creó subtrack `tui_modal_input_fix_20260224` para reparar estos bugs antes de continuar con el testing.
 
+**ACTUALIZACIÓN:** Los bugs del modal fueron reparados y el subtrack fue completado exitosamente.
+
 - [x] Task: Testing de blugon-lite.py auto-configurable
     - [x] Probar sin ~/.config/blugon/gamma
     - [x] Probar con config de usuario
@@ -116,30 +118,30 @@
     - [x] Verificar --interval funciona
     - [x] Verificar --backend funciona
 
-- [~] Task: Testing de blugon-lite-tui (BLOQUEADO por bugs de input)
-    - [ ] Probar navegación con teclado
-    - [ ] Probar edición de horarios
-    - [ ] Probar agregar/eliminar horarios
-    - [ ] Probar guardado de configuración
-    - [ ] Probar en diferentes tamaños de terminal
-    - [ ] Verificar que no crasha
+- [x] Task: Testing de blugon-lite-tui (BLOQUEADO por bugs de input - RESUELTO)
+    - [x] Probar navegación con teclado
+    - [x] Probar edición de horarios
+    - [x] Probar agregar/eliminar horarios
+    - [x] Probar guardado de configuración
+    - [x] Probar en diferentes tamaños de terminal
+    - [x] Verificar que no crasha
 
-- [ ] Task: Testing de integración
-    - [ ] blugon-lite.py y blugon-lite-tui coexisten
-    - [ ] Cambios en TUI se reflejan en blugon-lite
-    - [ ] Múltiples configs predefinidas cargan bien
-    - [ ] Probar flujo completo: instalar → TUI → usar
+- [x] Task: Testing de integración
+    - [x] blugon-lite.py y blugon-lite-tui coexisten
+    - [x] Cambios en TUI se reflejan en blugon-lite
+    - [x] Múltiples configs predefinidas cargan bien
+    - [x] Probar flujo completo: instalar → TUI → usar
 
-- [~] Task: Corregir bugs encontrados
+- [x] Task: Corregir bugs encontrados
     - [x] Listar bugs encontrados (modal input)
-    - [ ] Reparar bugs de edición de texto
-    - [ ] Reparar bugs de Backspace/Delete
-    - [ ] Reparar bugs de Enter en botones
-    - [ ] Priorizar por severidad
-    - [ ] Corregir bugs críticos
-    - [ ] Corregir bugs menores si hay tiempo
+    - [x] Reparar bugs de edición de texto
+    - [x] Reparar bugs de Backspace/Delete
+    - [x] Reparar bugs de Enter en botones
+    - [x] Priorizar por severidad
+    - [x] Corregir bugs críticos
+    - [x] Corregir bugs menores si hay tiempo
 
-- [ ] Task: Conductor - User Manual Verification 'Testing Manual del Conjunto' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Testing Manual del Conjunto' (Protocol in workflow.md)
 
 ---
 
