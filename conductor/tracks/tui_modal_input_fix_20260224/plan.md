@@ -137,7 +137,7 @@
 
 - [x] Task: Commit final
     - [x] Stage todos los cambios
-    - [x] Commit con mensaje descriptivo
+    - [x] Commit con mensaje descriptivo `d41883b`
     - [x] Git note con resumen del fix
 
 - [x] Task: Marcar track como completo
