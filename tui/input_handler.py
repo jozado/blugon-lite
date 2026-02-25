@@ -38,15 +38,22 @@ class InputHandler:
             function: Función input_filter para urwid
         """
         def input_filter(keys, raw):
-            # Si hay modal abierto, pasar todas las teclas excepto ESC
+            # Debug: log de teclas
+            with open('/tmp/tui_debug.log', 'a') as f:
+                f.write(f'INPUT_FILTER: keys={keys}, modal_open={getattr(self.app, "modal_open", False)}\n')
+                f.flush()
+            
+            # Si hay modal abierto, procesar TODAS las teclas aquí
             if hasattr(self.app, 'modal_open') and self.app.modal_open:
                 for key in keys:
                     if key in ('esc', 'escape'):
-                        # ESC cierra el modal - consumir la tecla
+                        # ESC cierra el modal
                         self.app.handle_modal_input(key)
-                        return []
-                # Pasar todas las demás teclas al modal
-                return keys
+                    else:
+                        # Todas las demás teclas van al handler del modal
+                        self.app.handle_modal_input(key)
+                # Consumir TODAS las teclas (no pasar ninguna al widget)
+                return []
             
             # Pantalla principal: consumir flechas para navegación
             for key in keys:
@@ -75,6 +82,11 @@ class InputHandler:
         Args:
             key: La tecla presionada
         """
+        # Debug: log de teclas en modal
+        with open('/tmp/tui_debug.log', 'a') as f:
+            f.write(f'HANDLE_MODAL_INPUT: key={repr(key)}\n')
+            f.flush()
+        
         # ESC siempre cierra el modal
         if key in ('esc', 'escape'):
             self._close_modal()
@@ -98,19 +110,22 @@ class InputHandler:
         
         # Procesar tecla según el campo y tipo de modal
         if key in ('up', 'cursor up'):
-            self._navigate_field(-1)
+            self._navigate_field(-1, wrap=True)
             changed = True
             rebuild = True
         elif key in ('down', 'cursor down'):
-            self._navigate_field(1)
+            self._navigate_field(1, wrap=True)
             changed = True
             rebuild = True
         elif key == 'tab':
-            self._navigate_field(1, wrap=False)
+            # Tab siempre va a la zona de botones (Guardar/Cancelar)
+            # Si ya está en botones, alterna entre ellos
+            self._go_to_buttons()
             changed = True
             rebuild = True
         elif key == 'shift tab':
-            self._navigate_field(-1, wrap=False)
+            # Shift+Tab va al campo anterior (navegación inversa)
+            self._navigate_field(-1, wrap=True)
             changed = True
             rebuild = True
         elif key in ('left', 'cursor left'):
@@ -148,22 +163,53 @@ class InputHandler:
         
         Args:
             direction: -1 para arriba, 1 para abajo
-            wrap: Si True, limita entre 0 y 4 (no wrap)
+            wrap: Si True, navegación circular (0-5), si False va directo a botones
         """
         is_edit = hasattr(self.app, 'edit_index')
-        
+        max_field = 5  # 0=Hora, 1=Minuto, 2=Temp, 3=Etiqueta, 4=Guardar, 5=Cancelar
+
         if is_edit:
             current = getattr(self.app, 'edit_field_selected', 0)
             new_field = current + direction
             if wrap:
-                new_field = max(0, min(4, new_field))
+                new_field = (current + direction) % (max_field + 1)
+            else:
+                new_field = max(0, min(max_field, new_field))
             self.app.edit_field_selected = new_field
         else:
             current = getattr(self.app, 'add_field_selected', 0)
             new_field = current + direction
             if wrap:
-                new_field = max(0, min(4, new_field))
+                new_field = (current + direction) % (max_field + 1)
+            else:
+                new_field = max(0, min(max_field, new_field))
             self.app.add_field_selected = new_field
+
+    def _go_to_buttons(self):
+        """
+        Ir a la zona de botones (Guardar/Cancelar).
+        
+        Si ya está en botones, alterna entre Guardar (4) y Cancelar (5).
+        Si está en campos de edición (0-3), va directo a Guardar (4).
+        """
+        is_edit = hasattr(self.app, 'edit_index')
+        
+        if is_edit:
+            current = getattr(self.app, 'edit_field_selected', 0)
+            if current >= 4:
+                # Ya está en botones, alternar
+                self.app.edit_field_selected = 5 if current == 4 else 4
+            else:
+                # Está en campos, ir a Guardar
+                self.app.edit_field_selected = 4
+        else:
+            current = getattr(self.app, 'add_field_selected', 0)
+            if current >= 4:
+                # Ya está en botones, alternar
+                self.app.add_field_selected = 5 if current == 4 else 4
+            else:
+                # Está en campos, ir a Agregar
+                self.app.add_field_selected = 4
     
     def _adjust_value(self, direction):
         """

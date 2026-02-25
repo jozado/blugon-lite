@@ -254,17 +254,31 @@ class BlugonLiteTUI:
         )
 
     def refresh_schedule_list(self):
-        """Actualizar lista de horarios."""
+        """Actualizar lista de horarios reconstruyendo los widgets."""
         total = len(self.schedules)
-        for i, item in enumerate(self.schedule_items):
-            item.is_selected = (i == self.selected_index)
-            item.is_first = (i == 0)
-            item.is_last = (i == total - 1)
-            item.total_items = total
-            item._w = item._build_widget()
-
-        if hasattr(self, 'schedule_walker') and self.schedule_items:
+        
+        # Reconstruir completamente los items con los datos actualizados
+        self.schedule_items = []
+        for i, sched in enumerate(self.schedules):
+            item = ScheduleItem(
+                sched, i,
+                is_selected=(i == self.selected_index),
+                is_first=(i == 0),
+                is_last=(i == total - 1),
+                total_items=total
+            )
+            self.schedule_items.append(item)
+        
+        # Reemplazar la lista en el walker
+        if hasattr(self, 'schedule_walker'):
+            # Limpiar walker y agregar nuevos items
+            while len(self.schedule_walker) > 0:
+                self.schedule_walker.pop(0)
+            for item in self.schedule_items:
+                self.schedule_walker.append(item)
             self.schedule_walker.set_focus(self.selected_index)
+        else:
+            self.schedule_walker = urwid.SimpleFocusListWalker(self.schedule_items)
 
         if self.unsaved_changes:
             self.status.original_widget.set_text(" (* Cambios sin guardar)")
@@ -317,9 +331,27 @@ class BlugonLiteTUI:
             urwid.Button("Sí, salir", lambda b: self.confirm_exit_yes()),
             urwid.Button("No, continuar", lambda b: self.confirm_exit_no()),
         ])
+        body.set_focus(3)  # Foco inicial en "Sí, salir"
 
         def modal_keypress(key):
-            if key == 'esc':
+            # Manejar navegación con flechas y Enter
+            if key in ('up', 'cursor up', 'down', 'cursor down'):
+                # Navegar entre botones
+                focus = body.get_focus()
+                if focus == 3:  # Botón "Sí"
+                    body.set_focus(4)  # Ir a "No"
+                elif focus == 4:  # Botón "No"
+                    body.set_focus(3)  # Ir a "Sí"
+                return None
+            elif key == 'enter':
+                # Enter ejecuta el botón seleccionado
+                focus = body.get_focus()
+                if focus == 3:
+                    self.confirm_exit_yes()
+                elif focus == 4:
+                    self.confirm_exit_no()
+                return None
+            elif key == 'esc':
                 self.confirm_exit_no()
                 return None
             return key
@@ -484,12 +516,14 @@ class BlugonLiteTUI:
         self._cleanup_edit_vars()
         self.modal_open = False
         self.loop.widget = self.main_frame
+        self.loop.draw_screen()
 
     def cancel_edit(self):
         """Cancelar edición."""
         self._cleanup_edit_vars()
         self.modal_open = False
         self.loop.widget = self.main_frame
+        self.loop.draw_screen()
 
     def _cleanup_edit_vars(self):
         """Limpiar variables de edición."""
@@ -614,12 +648,14 @@ class BlugonLiteTUI:
         self._cleanup_add_vars()
         self.modal_open = False
         self.loop.widget = self.main_frame
+        self.loop.draw_screen()
 
     def cancel_add(self):
         """Cancelar agregado."""
         self._cleanup_add_vars()
         self.modal_open = False
         self.loop.widget = self.main_frame
+        self.loop.draw_screen()
 
     def _cleanup_add_vars(self):
         """Limpiar variables de agregado."""
@@ -641,9 +677,27 @@ class BlugonLiteTUI:
             urwid.Button("Sí, eliminar", lambda b: self.confirm_delete(index)),
             urwid.Button("No, cancelar", lambda b: self.cancel_delete()),
         ])
+        body.set_focus(2)  # Foco inicial en "Sí, eliminar"
 
         def modal_keypress(key):
-            if key == 'esc':
+            # Manejar navegación con flechas y Enter
+            if key in ('up', 'cursor up', 'down', 'cursor down'):
+                # Navegar entre botones
+                focus = body.get_focus()
+                if focus == 2:  # Botón "Sí"
+                    body.set_focus(3)  # Ir a "No"
+                elif focus == 3:  # Botón "No"
+                    body.set_focus(2)  # Ir a "Sí"
+                return None
+            elif key == 'enter':
+                # Enter ejecuta el botón seleccionado
+                focus = body.get_focus()
+                if focus == 2:
+                    self.confirm_delete(index)
+                elif focus == 3:
+                    self.cancel_delete()
+                return None
+            elif key == 'esc':
                 self.cancel_delete()
                 return None
             return key
