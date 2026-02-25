@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Aplicación principal del TUI para blugon-lite."""
+"""
+blugon-lite-tui - Text User Interface para configuración de blugon-lite.
+
+Aplicación principal del TUI usando urwid.
+"""
 
 import urwid
 from datetime import datetime
@@ -13,59 +17,41 @@ from .utils import (
     is_daemon_running,
     get_label_for_time,
 )
-from .widgets import ColorPreview, ScheduleItem, ModalOverlay
+from .widgets import ColorPreview, ScheduleItem
+from .modals import ModalOverlay
+from .input_handler import InputHandler
 
 
 class BlugonLiteTUI:
-    """Clase principal de la aplicación TUI."""
+    """
+    Clase principal de la aplicación TUI.
+    
+    Responsable de:
+    - Gestionar el estado de la aplicación
+    - Crear y mantener la UI principal
+    - Coordinar con InputHandler para entrada de teclado
+    - Gestionar ciclo de vida de modales
+    """
 
     def __init__(self):
+        """Inicializar la aplicación TUI."""
         self.schedules = []
         self.selected_index = 0
         self.modified = False
         self.unsaved_changes = False
         self.current_theme = 'dark'
         self.daemon_active = False
+        
+        # Inicializar manejador de input
+        self.input_handler = InputHandler(self)
 
         self.load_config()
         self.daemon_active = is_daemon_running()
         self.create_widgets()
-
-        # Input filter para interceptar teclas
-        def input_filter(keys, raw):
-            # Si hay modal abierto, pasar todas las teclas al modal
-            # El modal se encarga de procesarlas mediante handle_modal_input
-            if hasattr(self, 'modal_open') and self.modal_open:
-                # ESC siempre cierra el modal (manejo global)
-                for key in keys:
-                    if key in ('esc', 'escape'):
-                        # Llamar al handler del modal para cierre
-                        if hasattr(self, 'handle_modal_input'):
-                            self.handle_modal_input(key)
-                        return []
-                # Pasar todas las demás teclas al widget del modal
-                return keys
-
-            # Input filter normal para la pantalla principal
-            for key in keys:
-                if key in ('up', 'cursor up'):
-                    self.on_navigate_up()
-                    return []  # Consumir la tecla
-                elif key in ('down', 'cursor down'):
-                    self.on_navigate_down()
-                    return []  # Consumir la tecla
-            return keys  # Pasar otras teclas
-
-        self.loop = urwid.MainLoop(
-            self.main_frame,
-            palette=PALETTE_DARK,
-            unhandled_input=self.handle_input,
-            input_filter=input_filter,
-            handle_mouse=False
-        )
+        self.create_main_loop()
 
     def load_config(self):
-        """Cargar configuración gamma."""
+        """Cargar configuración gamma desde archivo o defaults."""
         self.schedules = read_gamma_file(CONFIG_FILE)
         if not self.schedules:
             self.schedules = read_gamma_file(SYSTEM_CONFIG_FILE)
@@ -88,17 +74,16 @@ class BlugonLiteTUI:
 
         # Contenido principal
         main_content_inner = urwid.Pile([
-            ('pack', urwid.Text("")),  # Espacio vertical después del header
+            ('pack', urwid.Text("")),
             ('pack', self.info_panel),
-            ('pack', urwid.Text("")),  # Espacio vertical antes de la lista
-            ('pack', horarios_title),  # Título HORARIOS
-            ('pack', urwid.Text("")),  # Espacio vertical después de HORARIOS
-            ('weight', 1, self.schedule_list_widget),  # Lista de horarios
-            ('pack', urwid.Text("")),  # Espacio vertical
+            ('pack', urwid.Text("")),
+            ('pack', horarios_title),
+            ('pack', urwid.Text("")),
+            ('weight', 1, self.schedule_list_widget),
+            ('pack', urwid.Text("")),
             ('pack', self.status),
         ])
 
-        # Envolver en LineBox
         self.main_content = urwid.LineBox(
             urwid.Padding(main_content_inner, left=1, right=1),
             title=" blugon-lite TUI "
@@ -112,6 +97,16 @@ class BlugonLiteTUI:
 
         self.update_info()
 
+    def create_main_loop(self):
+        """Crear el main loop de urwid con input handler."""
+        self.loop = urwid.MainLoop(
+            self.main_frame,
+            palette=PALETTE_DARK,
+            unhandled_input=self.handle_input,
+            input_filter=self.input_handler.create_input_filter(),
+            handle_mouse=False
+        )
+
     def _create_header(self):
         """Crear header con estado del daemon."""
         indicator = '[●]' if self.daemon_active else '[○]'
@@ -120,7 +115,7 @@ class BlugonLiteTUI:
 
         header_text = urwid.Columns([
             ('pack', urwid.Text("  blugon-lite", align='left')),
-            urwid.Text(""),  # Espacio flexible
+            urwid.Text(""),
             ('pack', urwid.AttrMap(
                 urwid.Text(f"  {indicator} Daemon: {text}  ", align='right'),
                 attr
@@ -130,7 +125,7 @@ class BlugonLiteTUI:
         return urwid.AttrMap(header_text, 'header')
 
     def _create_info_panel(self):
-        """Crear panel de información con hora actual, temperatura y próximo cambio."""
+        """Crear panel de información con hora y próxima transición."""
         now = datetime.now()
         current_time = now.hour * 60 + now.minute
 
@@ -171,7 +166,7 @@ class BlugonLiteTUI:
         )
 
     def update_info(self):
-        """Actualizar panel de información con hora y próxima transición."""
+        """Actualizar panel de información."""
         now = datetime.now()
         current_time = now.hour * 60 + now.minute
 
@@ -209,9 +204,8 @@ class BlugonLiteTUI:
         self.info_panel.original_widget = urwid.Padding(info_text, left=1, right=1)
 
     def _create_schedule_list(self):
-        """Crear lista de horarios."""
+        """Crear lista de horarios interactiva."""
         self.schedule_items = []
-        # Crear los items inicialmente
         total = len(self.schedules)
         for i, sched in enumerate(self.schedules):
             item = ScheduleItem(
@@ -222,11 +216,10 @@ class BlugonLiteTUI:
                 total_items=total
             )
             self.schedule_items.append(item)
-        
-        # Usar SimpleFocusListWalker para que el ListBox se actualice
+
         self.schedule_walker = urwid.SimpleFocusListWalker(self.schedule_items)
         return urwid.ListBox(self.schedule_walker)
-    
+
     def on_navigate_up(self):
         """Manejar navegación hacia arriba."""
         if self.selected_index > 0:
@@ -262,16 +255,14 @@ class BlugonLiteTUI:
 
     def refresh_schedule_list(self):
         """Actualizar lista de horarios."""
-        # Actualizar el estado de selección de cada item
         total = len(self.schedules)
         for i, item in enumerate(self.schedule_items):
             item.is_selected = (i == self.selected_index)
             item.is_first = (i == 0)
             item.is_last = (i == total - 1)
             item.total_items = total
-            item._w = item._build_widget()  # Forzar actualización del widget
+            item._w = item._build_widget()
 
-        # Actualizar el foco del walker
         if hasattr(self, 'schedule_walker') and self.schedule_items:
             self.schedule_walker.set_focus(self.selected_index)
 
@@ -280,50 +271,13 @@ class BlugonLiteTUI:
         else:
             self.status.original_widget.set_text(" Ready")
 
-    def update_info(self):
-        """Actualizar panel de información con hora y próxima transición."""
-        now = datetime.now()
-        current_time = now.hour * 60 + now.minute
-
-        current_sched = None
-        next_sched = None
-
-        for sched in self.schedules:
-            sched_time = sched['hour'] * 60 + sched['minute']
-            if sched_time <= current_time:
-                current_sched = sched
-            elif next_sched is None:
-                next_sched = sched
-
-        if next_sched is None and self.schedules:
-            next_sched = self.schedules[0]
-
-        temp_info = f"{current_sched['temp_str']} ({current_sched['label']})" if current_sched else "N/A"
-
-        if next_sched:
-            next_time = next_sched['hour'] * 60 + next_sched['minute']
-            if next_time < current_time:
-                next_time += 24 * 60
-            diff_minutes = next_time - current_time
-            hours, mins = diff_minutes // 60, diff_minutes % 60
-            next_info = f"{next_sched['time_str']} → {next_sched['temp_str']} ({hours}h {mins}m)"
-        else:
-            next_info = "N/A"
-
-        info_text = urwid.Columns([
-            ('pack', urwid.Text(f"  HORA: {now.strftime('%H:%M')}  ")),
-            ('pack', urwid.Text(f"  TEMP: {temp_info}  ")),
-            ('pack', urwid.Text(f"  PRÓXIMO: {next_info}  ")),
-        ])
-
-        self.info_panel = urwid.AttrMap(
-            urwid.Padding(info_text, left=1, right=1),
-            'default'
-        )
-
     def handle_input(self, key):
-        """Manejar entrada de teclado global."""
-        # Si hay un modal abierto, NO manejar nada aquí (el modal captura las teclas)
+        """
+        Manejar entrada de teclado global.
+        
+        Solo se llama para teclas no consumidas por el input_filter.
+        """
+        # Si hay modal abierto, no manejar nada aquí
         if hasattr(self, 'modal_open') and self.modal_open:
             return
 
@@ -369,7 +323,7 @@ class BlugonLiteTUI:
                 self.confirm_exit_no()
                 return None
             return key
-        
+
         overlay = ModalOverlay(body, "Confirmar Salida", width=50, height=12, on_keypress=modal_keypress)
         self.loop.widget = overlay
         self.modal_open = True
@@ -385,6 +339,10 @@ class BlugonLiteTUI:
         self.modal_open = False
         self.loop.widget = self.main_frame
 
+    # =========================================================================
+    # Métodos de edición (movidos a módulo separado en siguiente refactor)
+    # =========================================================================
+    
     def edit_schedule(self, index=None):
         """Editar un horario."""
         if index is None:
@@ -394,37 +352,32 @@ class BlugonLiteTUI:
             return
 
         sched = self.schedules[index]
-        
-        # Si no existen las variables de edición, inicializarlas
+
         if not hasattr(self, 'edit_index'):
             self.edit_index = index
             self.edit_hour_val = sched['hour']
             self.edit_minute_val = sched['minute']
             self.edit_temp_val = int(sched['temp'])
             self.edit_label_val = sched.get('label', get_label_for_time(sched['hour'], sched['minute']))
-        
-        # Campo seleccionado (0=Hora, 1=Minuto, 2=Temperatura, 3=Etiqueta, 4=Guardar, 5=Cancelar)
+
         if not hasattr(self, 'edit_field_selected'):
             self.edit_field_selected = 0
-        
+
         self.edit_color_preview = ColorPreview(self.edit_temp_val)
         label = self.edit_label_val
-        
-        # Determinar qué campo está resaltado
+
         def highlight_field(value, field_idx, format_str="{}"):
             if self.edit_field_selected == field_idx:
                 return urwid.AttrMap(urwid.Text(f"[{format_str.format(value)}]", align='center'), 'selected')
             else:
                 return urwid.Text(f"[{format_str.format(value)}]", align='center')
-        
-        # Widget especial para etiqueta editable
+
         def highlight_label(value, field_idx):
             if self.edit_field_selected == field_idx:
                 return urwid.AttrMap(urwid.Text(f"[{value}]", align='left'), 'selected')
             else:
                 return urwid.Text(f" {value}", align='left')
 
-        # Instrucciones en recuadro
         instructions_box = urwid.LineBox(
             urwid.Pile([
                 urwid.Columns([
@@ -482,268 +435,36 @@ class BlugonLiteTUI:
         ])
 
         self.modal_body = body
-        # Modal con callback para capturar teclas
-        def modal_keypress(key):
-            return self.handle_modal_input(key)  # Retorna None si consume, key si no
         
+        def modal_keypress(key):
+            return self.handle_modal_input(key)
+
         overlay = ModalOverlay(body, "Editar Horario", width=('relative', 90), height=('relative', 90), on_keypress=modal_keypress)
         self.loop.widget = overlay
         self.modal_open = True
 
     def handle_modal_input(self, key):
         """
-        Manejar entrada de teclado dentro del modal de edición/agregado.
-        
-        Este método procesa todas las teclas cuando el modal está abierto:
-        - Navegación entre campos (up, down, tab)
-        - Modificación de valores numéricos (left, right)
-        - Edición de texto (caracteres imprimibles, backspace, delete)
-        - Acciones (enter para guardar/cancelar, esc para cerrar)
+        Delegar manejo de input del modal al input_handler.
         
         Args:
-            key: La tecla presionada (string)
+            key: Tecla presionada
         """
-        # ESC siempre cierra el modal
-        if key in ('esc', 'escape'):
-            if hasattr(self, 'edit_index'):
-                self.cancel_edit()
-            elif hasattr(self, 'add_hour'):
-                self.cancel_add()
-            elif hasattr(self, 'theme_selector_open'):
-                self.cancel_theme()
-            elif hasattr(self, 'delete_confirm_open'):
-                self.cancel_delete()
-            elif hasattr(self, 'confirm_exit_open'):
-                self.confirm_exit_no()
-            else:
-                self.modal_open = False
-                self.loop.widget = self.main_frame
-            return
+        self.input_handler.handle_modal_input(key)
 
-        # Determinar si estamos en modo edición o agregado
-        is_edit = hasattr(self, 'edit_index')
-        is_add = hasattr(self, 'add_hour')
-
-        if not is_edit and not is_add:
-            return
-
-        changed = False
-        rebuild = False
-
-        # Determinar campo seleccionado
-        if is_edit:
-            field_selected = getattr(self, 'edit_field_selected', 0)
-        else:
-            field_selected = getattr(self, 'add_field_selected', 0)
-
-        # Navegación entre campos con ↑ ↓
-        if key in ('up', 'cursor up'):
-            if field_selected > 0:
-                if is_edit:
-                    self.edit_field_selected = field_selected - 1
-                else:
-                    self.add_field_selected = field_selected - 1
-                rebuild = True
-            changed = True
-        elif key in ('down', 'cursor down'):
-            max_field = 5  # 0=Hora, 1=Minuto, 2=Temperatura, 3=Etiqueta, 4=Guardar, 5=Cancelar
-            if field_selected < max_field:
-                if is_edit:
-                    self.edit_field_selected = field_selected + 1
-                else:
-                    self.add_field_selected = field_selected + 1
-                rebuild = True
-            changed = True
-        # Navegación con Tab hacia adelante
-        elif key == 'tab':
-            if is_edit:
-                self.edit_field_selected = min(4, self.edit_field_selected + 1)
-            else:
-                self.add_field_selected = min(4, self.add_field_selected + 1)
-            rebuild = True
-            changed = True
-        # Shift+Tab para navegación hacia atrás
-        elif key == 'shift tab':
-            if is_edit:
-                self.edit_field_selected = max(0, self.edit_field_selected - 1)
-            else:
-                self.add_field_selected = max(0, self.add_field_selected - 1)
-            rebuild = True
-            changed = True
-        # Ajuste de valores con ← →
-        elif key in ('left', 'cursor left'):
-            if field_selected >= 4:  # Estamos en botones, ir a Cancelar
-                if is_edit:
-                    self.edit_field_selected = 5
-                else:
-                    self.add_field_selected = 5
-                rebuild = True
-                changed = True
-            elif is_edit:
-                if field_selected == 0:  # Hora
-                    self.edit_hour_val = (self.edit_hour_val - 1) % 24
-                    changed = True
-                elif field_selected == 1:  # Minuto
-                    self.edit_minute_val = (self.edit_minute_val - 5) % 60
-                    changed = True
-                elif field_selected == 2:  # Temperatura
-                    self.edit_temp_val = max(1000, self.edit_temp_val - 100)
-                    changed = True
-                # Nota: field_selected == 3 (Etiqueta) NO se modifica con flechas
-            else:
-                if field_selected == 0:  # Hora
-                    self.add_hour = (self.add_hour - 1) % 24
-                    changed = True
-                elif field_selected == 1:  # Minuto
-                    self.add_minute = (self.add_minute - 5) % 60
-                    changed = True
-                elif field_selected == 2:  # Temperatura
-                    self.add_temp = max(1000, self.add_temp - 100)
-                    changed = True
-                # Nota: field_selected == 3 (Etiqueta) NO se modifica con flechas
-        elif key in ('right', 'cursor right'):
-            if field_selected >= 4:  # Estamos en botones, ir a Guardar/Agregar
-                if is_edit:
-                    self.edit_field_selected = 4
-                else:
-                    self.add_field_selected = 4
-                rebuild = True
-                changed = True
-            elif is_edit:
-                if field_selected == 0:  # Hora
-                    self.edit_hour_val = (self.edit_hour_val + 1) % 24
-                    changed = True
-                elif field_selected == 1:  # Minuto
-                    self.edit_minute_val = (self.edit_minute_val + 5) % 60
-                    changed = True
-                elif field_selected == 2:  # Temperatura
-                    self.edit_temp_val = min(20000, self.edit_temp_val + 100)
-                    changed = True
-                # Nota: field_selected == 3 (Etiqueta) NO se modifica con flechas
-            else:
-                if field_selected == 0:  # Hora
-                    self.add_hour = (self.add_hour + 1) % 24
-                    changed = True
-                elif field_selected == 1:  # Minuto
-                    self.add_minute = (self.add_minute + 5) % 60
-                    changed = True
-                elif field_selected == 2:  # Temperatura
-                    self.add_temp = min(20000, self.add_temp + 100)
-                    changed = True
-                # Nota: field_selected == 3 (Etiqueta) NO se modifica con flechas
-        # Enter para guardar/cancelar o ejecutar acción del botón
-        elif key == 'enter':
-            if field_selected == 4:  # Guardar/Agregar
-                if is_edit:
-                    self.save_edit_from_modal()
-                else:
-                    self.save_add_from_modal()
-                return
-            elif field_selected == 5:  # Cancelar
-                if is_edit:
-                    self.cancel_edit()
-                else:
-                    self.cancel_add()
-                return
-            # Si estamos en un campo numérico, Enter también guarda
-            elif field_selected < 3:
-                if is_edit:
-                    self.save_edit_from_modal()
-                else:
-                    self.save_add_from_modal()
-                return
-        # Teclas de edición de texto para campo Etiqueta (field 3)
-        elif field_selected == 3:
-            # Backspace borra último carácter
-            if key in ('backspace', 'ctrl h'):
-                if is_edit and hasattr(self, 'edit_label_val'):
-                    if self.edit_label_val:
-                        self.edit_label_val = self.edit_label_val[:-1]
-                        changed = True
-                elif is_add and hasattr(self, 'add_label_val'):
-                    if self.add_label_val:
-                        self.add_label_val = self.add_label_val[:-1]
-                        changed = True
-            # Delete borra todo el contenido
-            elif key in ('delete', 'ctrl d'):
-                if is_edit:
-                    self.edit_label_val = ""
-                    changed = True
-                elif is_add:
-                    self.add_label_val = ""
-                    changed = True
-            # Caracteres imprimibles se agregan al texto (máximo 20 chars)
-            elif len(key) == 1 and key.isprintable():
-                if is_edit and hasattr(self, 'edit_label_val'):
-                    if len(self.edit_label_val) < 20:
-                        self.edit_label_val = self.edit_label_val + key
-                        changed = True
-                elif is_add and hasattr(self, 'add_label_val'):
-                    if len(self.add_label_val) < 20:
-                        self.add_label_val = self.add_label_val + key
-                        changed = True
-
-        if changed:
-            # Actualizar vista previa
-            if is_edit:
-                self.edit_color_preview.update(self.edit_temp_val)
-                # Reconstruir el modal
-                self.edit_schedule(self.edit_index)
-            else:
-                self.add_color_preview.update(self.add_temp)
-                # Reconstruir el modal
-                self.add_schedule()
-
-            # Redibujar
-            self.loop.draw_screen()
-
-    def save_edit(self, index, hour_edit, minute_edit, temp_edit):
-        """Guardar edición de horario."""
-        try:
-            hour = int(hour_edit.edit_text) if hour_edit.edit_text else 12
-            minute = int(minute_edit.edit_text) if minute_edit.edit_text else 0
-            temp = int(temp_edit.edit_text) if temp_edit.edit_text else 6500
-
-            if not (0 <= hour <= 23):
-                raise ValueError("Hora debe ser 0-23")
-            if not (0 <= minute <= 59):
-                raise ValueError("Minuto debe ser 0-59")
-            if not (1000 <= temp <= 20000):
-                raise ValueError("Temperatura debe ser 1000-20000")
-
-            label = get_label_for_time(hour, minute)
-            self.schedules[index] = {
-                'hour': hour,
-                'minute': minute,
-                'temp': temp,
-                'time_str': f"{hour:02d}:{minute:02d}",
-                'temp_str': f"{temp}K",
-                'label': label
-            }
-            self.schedules.sort(key=lambda x: x['hour'] * 60 + x['minute'])
-            self.unsaved_changes = True
-            self.refresh_schedule_list()
-            self.show_message("Horario actualizado", 'success')
-        except ValueError as e:
-            self.show_message(f"Error: {e}", 'error')
-            return
-
-        self.loop.widget = self.main_frame
-
-    def save_edit_from_modal(self, index=None):
+    def save_edit_from_modal(self):
         """Guardar edición desde el modal."""
-        if index is None:
-            index = getattr(self, 'edit_index', None)
+        index = getattr(self, 'edit_index', None)
         if index is None:
             self.show_message("Error: no hay índice de edición", 'error')
             return
-            
+
         try:
             hour = self.edit_hour_val
             minute = self.edit_minute_val
             temp = self.edit_temp_val
-            label = self.edit_label_val if hasattr(self, 'edit_label_val') else get_label_for_time(hour, minute)
-            
+            label = getattr(self, 'edit_label_val', get_label_for_time(hour, minute))
+
             self.schedules[index] = {
                 'hour': hour,
                 'minute': minute,
@@ -759,76 +480,51 @@ class BlugonLiteTUI:
         except Exception as e:
             self.show_message(f"Error: {e}", 'error')
             return
-        
-        # Limpiar variables de edición
-        if hasattr(self, 'edit_index'):
-            del self.edit_index
-        if hasattr(self, 'edit_hour_val'):
-            del self.edit_hour_val
-        if hasattr(self, 'edit_minute_val'):
-            del self.edit_minute_val
-        if hasattr(self, 'edit_temp_val'):
-            del self.edit_temp_val
-        if hasattr(self, 'edit_label_val'):
-            del self.edit_label_val
-        if hasattr(self, 'edit_color_preview'):
-            del self.edit_color_preview
-        if hasattr(self, 'edit_field_selected'):
-            del self.edit_field_selected
-        
+
+        self._cleanup_edit_vars()
         self.modal_open = False
         self.loop.widget = self.main_frame
 
     def cancel_edit(self):
         """Cancelar edición."""
-        if hasattr(self, 'edit_index'):
-            del self.edit_index
-        if hasattr(self, 'edit_hour_val'):
-            del self.edit_hour_val
-        if hasattr(self, 'edit_minute_val'):
-            del self.edit_minute_val
-        if hasattr(self, 'edit_temp_val'):
-            del self.edit_temp_val
-        if hasattr(self, 'edit_label_val'):
-            del self.edit_label_val
-        if hasattr(self, 'edit_color_preview'):
-            del self.edit_color_preview
-        if hasattr(self, 'edit_field_selected'):
-            del self.edit_field_selected
+        self._cleanup_edit_vars()
         self.modal_open = False
         self.loop.widget = self.main_frame
 
+    def _cleanup_edit_vars(self):
+        """Limpiar variables de edición."""
+        for var in ['edit_index', 'edit_hour_val', 'edit_minute_val', 
+                    'edit_temp_val', 'edit_label_val', 'edit_color_preview',
+                    'edit_field_selected']:
+            if hasattr(self, var):
+                delattr(self, var)
+
     def add_schedule(self):
         """Agregar nuevo horario."""
-        # Si no existen las variables de agregado, inicializarlas
         if not hasattr(self, 'add_hour'):
             self.add_hour = 12
             self.add_minute = 0
             self.add_temp = 6500
             self.add_label_val = "Mañana"
-        
-        # Campo seleccionado (0=Hora, 1=Minuto, 2=Temperatura, 3=Etiqueta, 4=Agregar, 5=Cancelar)
+
         if not hasattr(self, 'add_field_selected'):
             self.add_field_selected = 0
-        
+
         self.add_color_preview = ColorPreview(self.add_temp)
         label = self.add_label_val
-        
-        # Determinar qué campo está resaltado
+
         def highlight_field(value, field_idx, format_str="{}"):
             if self.add_field_selected == field_idx:
                 return urwid.AttrMap(urwid.Text(f"[{format_str.format(value)}]", align='center'), 'selected')
             else:
                 return urwid.Text(f"[{format_str.format(value)}]", align='center')
-        
-        # Widget especial para etiqueta editable
+
         def highlight_label(value, field_idx):
             if self.add_field_selected == field_idx:
                 return urwid.AttrMap(urwid.Text(f"[{value}]", align='left'), 'selected')
             else:
                 return urwid.Text(f" {value}", align='left')
 
-        # Instrucciones en recuadro
         instructions_box = urwid.LineBox(
             urwid.Pile([
                 urwid.Columns([
@@ -886,69 +582,19 @@ class BlugonLiteTUI:
         ])
 
         self.modal_body = body
-        # Modal con callback para capturar teclas
+        
         def modal_keypress(key):
             self.handle_modal_input(key)
-            return None  # Siempre consumir la tecla
-        
+            return None
+
         overlay = ModalOverlay(body, "Agregar Horario", width=('relative', 90), height=('relative', 90), on_keypress=modal_keypress)
         self.loop.widget = overlay
         self.modal_open = True
 
-    def save_add(self, hour_edit, minute_edit, temp_edit):
-        """Guardar nuevo horario."""
-        try:
-            hour = int(hour_edit.edit_text) if hour_edit.edit_text else 12
-            minute = int(minute_edit.edit_text) if minute_edit.edit_text else 0
-            temp = int(temp_edit.edit_text) if temp_edit.edit_text else 6500
-
-            if not (0 <= hour <= 23):
-                raise ValueError("Hora debe ser 0-23")
-            if not (0 <= minute <= 59):
-                raise ValueError("Minuto debe ser 0-59")
-            if not (1000 <= temp <= 20000):
-                raise ValueError("Temperatura debe ser 1000-20000")
-
-            label = get_label_for_time(hour, minute)
-            self.schedules.append({
-                'hour': hour,
-                'minute': minute,
-                'temp': temp,
-                'time_str': f"{hour:02d}:{minute:02d}",
-                'temp_str': f"{temp}K",
-                'label': label
-            })
-            self.schedules.sort(key=lambda x: x['hour'] * 60 + x['minute'])
-            self.unsaved_changes = True
-            self.refresh_schedule_list()
-            self.show_message("Horario agregado", 'success')
-        except ValueError as e:
-            self.show_message(f"Error: {e}", 'error')
-            return
-
-        self.loop.widget = self.main_frame
-
-    def cancel_add(self):
-        """Cancelar agregado."""
-        if hasattr(self, 'add_hour'):
-            del self.add_hour
-        if hasattr(self, 'add_minute'):
-            del self.add_minute
-        if hasattr(self, 'add_temp'):
-            del self.add_temp
-        if hasattr(self, 'add_label_val'):
-            del self.add_label_val
-        if hasattr(self, 'add_color_preview'):
-            del self.add_color_preview
-        if hasattr(self, 'add_field_selected'):
-            del self.add_field_selected
-        self.modal_open = False
-        self.loop.widget = self.main_frame
-
     def save_add_from_modal(self):
         """Guardar agregado desde el modal."""
         try:
-            label = self.add_label_val if hasattr(self, 'add_label_val') else get_label_for_time(self.add_hour, self.add_minute)
+            label = getattr(self, 'add_label_val', get_label_for_time(self.add_hour, self.add_minute))
             self.schedules.append({
                 'hour': self.add_hour,
                 'minute': self.add_minute,
@@ -964,23 +610,23 @@ class BlugonLiteTUI:
         except Exception as e:
             self.show_message(f"Error: {e}", 'error')
             return
-        
-        # Limpiar variables de agregado
-        if hasattr(self, 'add_hour'):
-            del self.add_hour
-        if hasattr(self, 'add_minute'):
-            del self.add_minute
-        if hasattr(self, 'add_temp'):
-            del self.add_temp
-        if hasattr(self, 'add_label_val'):
-            del self.add_label_val
-        if hasattr(self, 'add_color_preview'):
-            del self.add_color_preview
-        if hasattr(self, 'add_field_selected'):
-            del self.add_field_selected
-        
+
+        self._cleanup_add_vars()
         self.modal_open = False
         self.loop.widget = self.main_frame
+
+    def cancel_add(self):
+        """Cancelar agregado."""
+        self._cleanup_add_vars()
+        self.modal_open = False
+        self.loop.widget = self.main_frame
+
+    def _cleanup_add_vars(self):
+        """Limpiar variables de agregado."""
+        for var in ['add_hour', 'add_minute', 'add_temp', 
+                    'add_label_val', 'add_color_preview', 'add_field_selected']:
+            if hasattr(self, var):
+                delattr(self, var)
 
     def delete_schedule(self, index):
         """Eliminar horario."""
@@ -1001,7 +647,7 @@ class BlugonLiteTUI:
                 self.cancel_delete()
                 return None
             return key
-        
+
         self.loop.widget = ModalOverlay(body, "Confirmar Eliminación", width=50, height=12, on_keypress=modal_keypress)
         self.modal_open = True
         self.delete_confirm_open = True
@@ -1055,7 +701,7 @@ class BlugonLiteTUI:
                 self.cancel_theme()
                 return None
             return key
-        
+
         self.loop.widget = ModalOverlay(body, "Temas", width=40, height=14, on_keypress=modal_keypress)
         self.modal_open = True
         self.theme_selector_open = True
