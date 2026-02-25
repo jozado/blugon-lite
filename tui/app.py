@@ -18,7 +18,7 @@ from .utils import (
     get_label_for_time,
 )
 from .widgets import ColorPreview, ScheduleItem
-from .modals import ModalOverlay
+from .modals import ModalOverlay, EditScheduleModal, AddScheduleModal, DeleteConfirmModal
 from .input_handler import InputHandler
 
 
@@ -398,137 +398,44 @@ class BlugonLiteTUI:
         self.loop.widget = self.main_frame
 
     # =========================================================================
-    # Métodos de edición (movidos a módulo separado en siguiente refactor)
+    # Métodos de edición (usan EditScheduleModal)
     # =========================================================================
-    
+
     def edit_schedule(self, index=None):
         """Editar un horario."""
         if index is None:
-            index = getattr(self, 'edit_index', None)
-        if index is None or index < 0 or index >= len(self.schedules):
+            index = self.selected_index
+        if index < 0 or index >= len(self.schedules):
             self.show_message("Selecciona un horario válido", 'warning')
             return
 
         sched = self.schedules[index]
+        modal = EditScheduleModal(self, index, sched)
+        body = modal.build_body()
 
-        if not hasattr(self, 'edit_index'):
-            self.edit_index = index
-            self.edit_hour_val = sched['hour']
-            self.edit_minute_val = sched['minute']
-            self.edit_temp_val = int(sched['temp'])
-            self.edit_label_val = sched.get('label', get_label_for_time(sched['hour'], sched['minute']))
-
-        if not hasattr(self, 'edit_field_selected'):
-            self.edit_field_selected = 0
-
-        self.edit_color_preview = ColorPreview(self.edit_temp_val)
-        label = self.edit_label_val
-
-        def highlight_field(value, field_idx, format_str="{}"):
-            if self.edit_field_selected == field_idx:
-                return urwid.AttrMap(urwid.Text(f"[{format_str.format(value)}]", align='center'), 'selected')
-            else:
-                return urwid.Text(f"[{format_str.format(value)}]", align='center')
-
-        def highlight_label(value, field_idx):
-            if self.edit_field_selected == field_idx:
-                return urwid.AttrMap(urwid.Text(f"[{value}]", align='left'), 'selected')
-            else:
-                return urwid.Text(f" {value}", align='left')
-
-        instructions_box = urwid.LineBox(
-            urwid.Pile([
-                urwid.Columns([
-                    ('pack', urwid.Text("  ← → ")),
-                    ('pack', urwid.Text("ajustar Hora/Min/Temp")),
-                ]),
-                urwid.Columns([
-                    ('pack', urwid.Text("  ↑ ↓  ")),
-                    ('pack', urwid.Text("navegar campos")),
-                ]),
-                urwid.Columns([
-                    ('pack', urwid.Text("  Tab  ")),
-                    ('pack', urwid.Text("ir a botones")),
-                ]),
-                urwid.Columns([
-                    ('pack', urwid.Text("  Del  ")),
-                    ('pack', urwid.Text("borrar Etiqueta")),
-                ]),
-            ]),
-            title=" Navegación "
-        )
-
-        body = urwid.Pile([
-            urwid.Divider(),
-            urwid.Columns([
-                ('pack', urwid.Text("  Hora:        ")),
-                ('pack', highlight_field(f"{self.edit_hour_val:02d}", 0)),
-            ]),
-            urwid.Columns([
-                ('pack', urwid.Text("  Minuto:      ")),
-                ('pack', highlight_field(f"{self.edit_minute_val:02d}", 1)),
-            ]),
-            urwid.Columns([
-                ('pack', urwid.Text("  Temperatura: ")),
-                ('pack', highlight_field(f"{self.edit_temp_val}", 2, "{}K")),
-            ]),
-            urwid.Columns([
-                ('pack', urwid.Text("  Etiqueta:    ")),
-                ('pack', highlight_label(label, 3)),
-            ]),
-            urwid.Divider(),
-            urwid.Text("  ─── Vista Previa ────────────────────"),
-            self.edit_color_preview,
-            urwid.Divider(),
-            instructions_box,
-            urwid.Divider(),
-            urwid.Columns([
-                ('pack', urwid.Text("  ")),
-                ('pack', highlight_field("Guardar", 4)),
-                ('pack', urwid.Text("    ")),
-                ('pack', highlight_field("Cancelar", 5)),
-                ('pack', urwid.Text("  ")),
-            ]),
-            urwid.Divider(),
-        ])
-
-        self.modal_body = body
-        
         def modal_keypress(key):
-            return self.handle_modal_input(key)
+            return modal.handle_input(key)
 
         overlay = ModalOverlay(body, "Editar Horario", width=('relative', 90), height=('relative', 90), on_keypress=modal_keypress)
         self.loop.widget = overlay
         self.modal_open = True
 
-    def handle_modal_input(self, key):
-        """
-        Delegar manejo de input del modal al input_handler.
-        
-        Args:
-            key: Tecla presionada
-        """
-        self.input_handler.handle_modal_input(key)
-
     def save_edit_from_modal(self):
         """Guardar edición desde el modal."""
-        index = getattr(self, 'edit_index', None)
-        if index is None:
+        if not hasattr(self, 'edit_index'):
             self.show_message("Error: no hay índice de edición", 'error')
             return
 
         try:
-            hour = self.edit_hour_val
-            minute = self.edit_minute_val
-            temp = self.edit_temp_val
-            label = getattr(self, 'edit_label_val', get_label_for_time(hour, minute))
+            label = getattr(self, 'edit_label_val',
+                          get_label_for_time(self.edit_hour_val, self.edit_minute_val))
 
-            self.schedules[index] = {
-                'hour': hour,
-                'minute': minute,
-                'temp': temp,
-                'time_str': f"{hour:02d}:{minute:02d}",
-                'temp_str': f"{temp}K",
+            self.schedules[self.edit_index] = {
+                'hour': self.edit_hour_val,
+                'minute': self.edit_minute_val,
+                'temp': self.edit_temp_val,
+                'time_str': f"{self.edit_hour_val:02d}:{self.edit_minute_val:02d}",
+                'temp_str': f"{self.edit_temp_val}K",
                 'label': label
             }
             self.schedules.sort(key=lambda x: x['hour'] * 60 + x['minute'])
@@ -542,8 +449,6 @@ class BlugonLiteTUI:
         self.modal_open = False
         self.loop.widget = self.main_frame
         self.loop.draw_screen()
-        
-        # Guardar automáticamente al archivo
         self.save_config()
 
     def cancel_edit(self):
@@ -555,99 +460,23 @@ class BlugonLiteTUI:
 
     def _cleanup_edit_vars(self):
         """Limpiar variables de edición."""
-        for var in ['edit_index', 'edit_hour_val', 'edit_minute_val', 
+        for var in ['edit_index', 'edit_hour_val', 'edit_minute_val',
                     'edit_temp_val', 'edit_label_val', 'edit_color_preview',
                     'edit_field_selected']:
             if hasattr(self, var):
                 delattr(self, var)
 
+    # =========================================================================
+    # Métodos de agregado (usan AddScheduleModal)
+    # =========================================================================
+
     def add_schedule(self):
         """Agregar nuevo horario."""
-        if not hasattr(self, 'add_hour'):
-            self.add_hour = 12
-            self.add_minute = 0
-            self.add_temp = 6500
-            self.add_label_val = ""  # Etiqueta vacía por defecto
+        modal = AddScheduleModal(self)
+        body = modal.build_body()
 
-        if not hasattr(self, 'add_field_selected'):
-            self.add_field_selected = 0
-
-        self.add_color_preview = ColorPreview(self.add_temp)
-        label = self.add_label_val
-
-        def highlight_field(value, field_idx, format_str="{}"):
-            if self.add_field_selected == field_idx:
-                return urwid.AttrMap(urwid.Text(f"[{format_str.format(value)}]", align='center'), 'selected')
-            else:
-                return urwid.Text(f"[{format_str.format(value)}]", align='center')
-
-        def highlight_label(value, field_idx):
-            if self.add_field_selected == field_idx:
-                return urwid.AttrMap(urwid.Text(f"[{value}]", align='left'), 'selected')
-            else:
-                return urwid.Text(f" {value}", align='left')
-
-        instructions_box = urwid.LineBox(
-            urwid.Pile([
-                urwid.Columns([
-                    ('pack', urwid.Text("  ← → ")),
-                    ('pack', urwid.Text("ajustar Hora/Min/Temp")),
-                ]),
-                urwid.Columns([
-                    ('pack', urwid.Text("  ↑ ↓  ")),
-                    ('pack', urwid.Text("navegar campos")),
-                ]),
-                urwid.Columns([
-                    ('pack', urwid.Text("  Tab  ")),
-                    ('pack', urwid.Text("ir a botones")),
-                ]),
-                urwid.Columns([
-                    ('pack', urwid.Text("  Del  ")),
-                    ('pack', urwid.Text("borrar Etiqueta")),
-                ]),
-            ]),
-            title=" Navegación "
-        )
-
-        body = urwid.Pile([
-            urwid.Divider(),
-            urwid.Columns([
-                ('pack', urwid.Text("  Hora:        ")),
-                ('pack', highlight_field(f"{self.add_hour:02d}", 0)),
-            ]),
-            urwid.Columns([
-                ('pack', urwid.Text("  Minuto:      ")),
-                ('pack', highlight_field(f"{self.add_minute:02d}", 1)),
-            ]),
-            urwid.Columns([
-                ('pack', urwid.Text("  Temperatura: ")),
-                ('pack', highlight_field(f"{self.add_temp}", 2, "{}K")),
-            ]),
-            urwid.Columns([
-                ('pack', urwid.Text("  Etiqueta:    ")),
-                ('pack', highlight_label(label, 3)),
-            ]),
-            urwid.Divider(),
-            urwid.Text("  ─── Vista Previa ────────────────────"),
-            self.add_color_preview,
-            urwid.Divider(),
-            instructions_box,
-            urwid.Divider(),
-            urwid.Columns([
-                ('pack', urwid.Text("  ")),
-                ('pack', highlight_field("Agregar", 4)),
-                ('pack', urwid.Text("    ")),
-                ('pack', highlight_field("Cancelar", 5)),
-                ('pack', urwid.Text("  ")),
-            ]),
-            urwid.Divider(),
-        ])
-
-        self.modal_body = body
-        
         def modal_keypress(key):
-            self.handle_modal_input(key)
-            return None
+            return modal.handle_input(key)
 
         overlay = ModalOverlay(body, "Agregar Horario", width=('relative', 90), height=('relative', 90), on_keypress=modal_keypress)
         self.loop.widget = overlay
@@ -694,6 +523,10 @@ class BlugonLiteTUI:
             if hasattr(self, var):
                 delattr(self, var)
 
+    # =========================================================================
+    # Métodos de eliminación (usan DeleteConfirmModal)
+    # =========================================================================
+
     def delete_schedule(self, index):
         """Eliminar horario."""
         if index < 0 or index >= len(self.schedules):
@@ -701,38 +534,14 @@ class BlugonLiteTUI:
             return
 
         sched = self.schedules[index]
-        body = urwid.Pile([
-            urwid.Text(f"¿Eliminar horario {sched['time_str']} ({sched['temp_str']})?"),
-            urwid.Divider(),
-            urwid.Button("Sí, eliminar", lambda b: self.confirm_delete(index)),
-            urwid.Button("No, cancelar", lambda b: self.cancel_delete()),
-        ])
-        body.set_focus(2)  # Foco inicial en "Sí, eliminar"
+        modal = DeleteConfirmModal(self, index, sched)
+        body = modal.build_body()
 
         def modal_keypress(key):
-            # Manejar navegación con flechas y Enter
-            if key in ('up', 'cursor up', 'down', 'cursor down'):
-                # Navegar entre botones
-                focus = body.get_focus()
-                if focus == 2:  # Botón "Sí"
-                    body.set_focus(3)  # Ir a "No"
-                elif focus == 3:  # Botón "No"
-                    body.set_focus(2)  # Ir a "Sí"
-                return None
-            elif key == 'enter':
-                # Enter ejecuta el botón seleccionado
-                focus = body.get_focus()
-                if focus == 2:
-                    self.confirm_delete(index)
-                elif focus == 3:
-                    self.cancel_delete()
-                return None
-            elif key == 'esc':
-                self.cancel_delete()
-                return None
-            return key
+            return modal.handle_input(key)
 
-        self.loop.widget = ModalOverlay(body, "Confirmar Eliminación", width=50, height=12, on_keypress=modal_keypress)
+        overlay = ModalOverlay(body, "Confirmar Eliminación", width=50, height=14, on_keypress=modal_keypress)
+        self.loop.widget = overlay
         self.modal_open = True
         self.delete_confirm_open = True
 
