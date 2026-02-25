@@ -325,30 +325,39 @@ class BlugonLiteTUI:
     def show_confirm_exit(self):
         """Mostrar diálogo de confirmación de salida."""
         body = urwid.Pile([
+            urwid.Text(""),
             urwid.Text("Tienes cambios sin guardar."),
             urwid.Text("¿Estás seguro de que deseas salir?"),
             urwid.Divider(),
             urwid.Button("Sí, salir", lambda b: self.confirm_exit_yes()),
             urwid.Button("No, continuar", lambda b: self.confirm_exit_no()),
         ])
-        body.set_focus(3)  # Foco inicial en "Sí, salir"
+        body.set_focus(4)  # Foco inicial en "Sí, salir"
 
         def modal_keypress(key):
             # Manejar navegación con flechas y Enter
-            if key in ('up', 'cursor up', 'down', 'cursor down'):
+            if key in ('up', 'cursor up'):
                 # Navegar entre botones
                 focus = body.get_focus()
-                if focus == 3:  # Botón "Sí"
-                    body.set_focus(4)  # Ir a "No"
-                elif focus == 4:  # Botón "No"
-                    body.set_focus(3)  # Ir a "Sí"
+                if focus == 4:  # Botón "Sí"
+                    body.set_focus(5)  # Ir a "No"
+                elif focus == 5:  # Botón "No"
+                    body.set_focus(4)  # Ir a "Sí"
+                return None
+            elif key in ('down', 'cursor down'):
+                # Navegar entre botones
+                focus = body.get_focus()
+                if focus == 5:  # Botón "No"
+                    body.set_focus(4)  # Ir a "Sí"
+                elif focus == 4:  # Botón "Sí"
+                    body.set_focus(5)  # Ir a "No"
                 return None
             elif key == 'enter':
                 # Enter ejecuta el botón seleccionado
                 focus = body.get_focus()
-                if focus == 3:
+                if focus == 4:
                     self.confirm_exit_yes()
-                elif focus == 4:
+                elif focus == 5:
                     self.confirm_exit_no()
                 return None
             elif key == 'esc':
@@ -356,7 +365,7 @@ class BlugonLiteTUI:
                 return None
             return key
 
-        overlay = ModalOverlay(body, "Confirmar Salida", width=50, height=12, on_keypress=modal_keypress)
+        overlay = ModalOverlay(body, "Confirmar Salida", width=50, height=14, on_keypress=modal_keypress)
         self.loop.widget = overlay
         self.modal_open = True
         self.confirm_exit_open = True
@@ -506,7 +515,6 @@ class BlugonLiteTUI:
                 'label': label
             }
             self.schedules.sort(key=lambda x: x['hour'] * 60 + x['minute'])
-            self.unsaved_changes = True
             self.refresh_schedule_list()
             self.show_message("Horario actualizado", 'success')
         except Exception as e:
@@ -517,6 +525,9 @@ class BlugonLiteTUI:
         self.modal_open = False
         self.loop.widget = self.main_frame
         self.loop.draw_screen()
+        
+        # Guardar automáticamente al archivo
+        self.save_config()
 
     def cancel_edit(self):
         """Cancelar edición."""
@@ -638,7 +649,6 @@ class BlugonLiteTUI:
                 'label': label
             })
             self.schedules.sort(key=lambda x: x['hour'] * 60 + x['minute'])
-            self.unsaved_changes = True
             self.refresh_schedule_list()
             self.show_message("Horario agregado", 'success')
         except Exception as e:
@@ -649,6 +659,9 @@ class BlugonLiteTUI:
         self.modal_open = False
         self.loop.widget = self.main_frame
         self.loop.draw_screen()
+        
+        # Guardar automáticamente al archivo
+        self.save_config()
 
     def cancel_add(self):
         """Cancelar agregado."""
@@ -709,7 +722,6 @@ class BlugonLiteTUI:
     def confirm_delete(self, index):
         """Confirmar eliminación."""
         del self.schedules[index]
-        self.unsaved_changes = True
         if self.selected_index >= len(self.schedules):
             self.selected_index = max(0, len(self.schedules) - 1)
         self.refresh_schedule_list()
@@ -717,12 +729,17 @@ class BlugonLiteTUI:
         self.delete_confirm_open = False
         self.modal_open = False
         self.loop.widget = self.main_frame
+        self.loop.draw_screen()
+        
+        # Guardar automáticamente al archivo
+        self.save_config()
 
     def cancel_delete(self):
         """Cancelar eliminación."""
         self.delete_confirm_open = False
         self.modal_open = False
         self.loop.widget = self.main_frame
+        self.loop.draw_screen()
 
     def save_config(self):
         """Guardar configuración a archivo."""
