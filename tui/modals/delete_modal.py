@@ -54,34 +54,65 @@ class DeleteConfirmModal:
         Args:
             key: Tecla presionada
         """
+        # Debug logging
+        with open('/tmp/tui_delete.log', 'a') as f:
+            f.write(f'DELETE_MODAL handle_input: key={repr(key)}, body={self.body is not None}\n')
+            f.flush()
+        
         # ESC cierra el modal
         if key in ('esc', 'escape'):
+            with open('/tmp/tui_delete.log', 'a') as f:
+                f.write('DELETE_MODAL: ESC detectado, cancelando\n')
+                f.flush()
             self.cancel()
             return
         
         if self.body is None:
+            with open('/tmp/tui_delete.log', 'a') as f:
+                f.write('DELETE_MODAL: body es None, retorno\n')
+                f.flush()
             return
         
-        focus = self.body.get_focus()
+        # focus_position retorna el índice del widget enfocado
+        focus_index = self.body.focus_position
+        
+        with open('/tmp/tui_delete.log', 'a') as f:
+            f.write(f'DELETE_MODAL: focus_index={focus_index}\n')
+            f.flush()
         
         # Navegación con flechas
         if key in ('up', 'cursor up'):
-            if focus == 3:  # Botón "Sí"
+            with open('/tmp/tui_delete.log', 'a') as f:
+                f.write('DELETE_MODAL: flecha arriba detectada\n')
+                f.flush()
+            if focus_index == 3:  # Botón "Sí"
                 self.body.set_focus(4)  # Ir a "No"
-            elif focus == 4:  # Botón "No"
+            elif focus_index == 4:  # Botón "No"
                 self.body.set_focus(3)  # Ir a "Sí"
             return
         elif key in ('down', 'cursor down'):
-            if focus == 4:  # Botón "No"
+            with open('/tmp/tui_delete.log', 'a') as f:
+                f.write('DELETE_MODAL: flecha abajo detectada\n')
+                f.flush()
+            if focus_index == 4:  # Botón "No"
                 self.body.set_focus(3)  # Ir a "Sí"
-            elif focus == 3:  # Botón "Sí"
+            elif focus_index == 3:  # Botón "Sí"
                 self.body.set_focus(4)  # Ir a "No"
             return
         # Enter ejecuta el botón seleccionado
         elif key == 'enter':
-            if focus == 3:
+            with open('/tmp/tui_delete.log', 'a') as f:
+                f.write(f'DELETE_MODAL: Enter detectado, focus_index={focus_index}\n')
+                f.flush()
+            if focus_index == 3:
+                with open('/tmp/tui_delete.log', 'a') as f:
+                    f.write('DELETE_MODAL: Confirmando eliminación\n')
+                    f.flush()
                 self.confirm()
-            elif focus == 4:
+            elif focus_index == 4:
+                with open('/tmp/tui_delete.log', 'a') as f:
+                    f.write('DELETE_MODAL: Cancelando eliminación\n')
+                    f.flush()
                 self.cancel()
             return
     

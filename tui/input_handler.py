@@ -107,6 +107,8 @@ class InputHandler:
         if is_delete and not is_edit and not is_add:
             with open('/tmp/tui_debug.log', 'a') as f:
                 f.write('ES MODAL DE ELIMINACION, DELEGO AL MODAL\n')
+                f.write(f'current_modal exists: {hasattr(self.app, "current_modal")}\n')
+                f.write(f'current_modal: {self.app.current_modal if hasattr(self.app, "current_modal") else None}\n')
                 f.flush()
             if hasattr(self.app, 'current_modal') and self.app.current_modal:
                 self.app.current_modal.handle_input(key)
