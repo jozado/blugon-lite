@@ -16,6 +16,7 @@ from .utils import (
     get_default_schedules,
     is_daemon_running,
     get_label_for_time,
+    load_theme,
 )
 from .widgets import ColorPreview, ScheduleItem
 from .modals import ModalOverlay, EditScheduleModal, AddScheduleModal, DeleteConfirmModal, ThemeSelectorModal
@@ -39,7 +40,7 @@ class BlugonLiteTUI:
         self.selected_index = 0
         self.modified = False
         self.unsaved_changes = False
-        self.current_theme = 'dark'
+        self.current_theme = load_theme()  # Cargar tema guardado
         self.daemon_active = False
         
         # Inicializar manejador de input
@@ -49,6 +50,10 @@ class BlugonLiteTUI:
         self.daemon_active = is_daemon_running()
         self.create_widgets()
         self.create_main_loop()
+        
+        # Aplicar tema cargado
+        if self.current_theme in THEMES:
+            self.loop.screen.register_palette(THEMES[self.current_theme][1])
 
     def load_config(self):
         """Cargar configuración gamma desde archivo o defaults."""

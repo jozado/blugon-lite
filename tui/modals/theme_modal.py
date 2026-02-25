@@ -5,6 +5,7 @@ Modal de selección de temas para el TUI de blugon-lite.
 
 import urwid
 from ..themes import THEMES
+from ..utils import save_theme
 
 
 class ThemeSelectorModal:
@@ -68,32 +69,38 @@ class ThemeSelectorModal:
         focus_index = self.body.focus_position
         total_items = len(self.body.contents)
         
-        # Navegación con flechas (cíclica)
+        # Navegación con flechas (saltando Dividers)
         if key in ('up', 'cursor up'):
-            if focus_index > 2:  # Después del header y divider
-                self.body.focus_position = focus_index - 1
+            new_focus = focus_index - 1
+            while new_focus >= 2:
+                widget = self.body.contents[new_focus][0]
+                if not isinstance(widget, urwid.Divider):
+                    self.body.focus_position = new_focus
+                    break
+                new_focus -= 1
             else:
-                self.body.focus_position = total_items - 1  # Ir al último (Cancelar)
+                # Ir al último botón (Cancelar)
+                self.body.focus_position = total_items - 1
             return
         elif key in ('down', 'cursor down'):
-            if focus_index < total_items - 1:
-                self.body.focus_position = focus_index + 1
+            new_focus = focus_index + 1
+            while new_focus < total_items:
+                widget = self.body.contents[new_focus][0]
+                if not isinstance(widget, urwid.Divider):
+                    self.body.focus_position = new_focus
+                    break
+                new_focus += 1
             else:
-                self.body.focus_position = 2  # Volver al primer tema
+                # Volver al primer tema
+                self.body.focus_position = 2
             return
-        # Tab para navegar hacia adelante
+        # Tab va directo a Cancelar
         elif key == 'tab':
-            if focus_index < total_items - 1:
-                self.body.focus_position = focus_index + 1
-            else:
-                self.body.focus_position = 2  # Volver al primer tema
+            self.body.focus_position = total_items - 1  # Cancelar
             return
-        # Shift+Tab para navegar hacia atrás
+        # Shift+Tab va al primer tema
         elif key == 'shift tab':
-            if focus_index > 2:
-                self.body.focus_position = focus_index - 1
-            else:
-                self.body.focus_position = total_items - 1  # Ir al último (Cancelar)
+            self.body.focus_position = 2  # Primer tema
             return
         # Enter selecciona el botón enfocado
         elif key == 'enter':
@@ -118,6 +125,8 @@ class ThemeSelectorModal:
             try:
                 self.app.loop.screen.register_palette(THEMES[theme_id][1])
                 self.app.current_theme = theme_id
+                # Guardar tema en archivo de configuración
+                save_theme(theme_id)
                 self.app.show_message(f"Tema cambiado a {theme_id}", 'success')
             except Exception as e:
                 self.app.show_message(f"Error al aplicar tema: {e}", 'error')

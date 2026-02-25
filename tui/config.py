@@ -11,6 +11,9 @@ CONFIG_DIR = os.environ.get('XDG_CONFIG_HOME', os.path.expanduser('~/.config')) 
 CONFIG_FILE = CONFIG_DIR + '/gamma'
 SYSTEM_CONFIG_FILE = MAKE_INSTALL_PREFIX + '/share/blugon-lite/configs/evening/gamma'
 
+# Archivo de configuración del TUI
+TUI_CONFIG_FILE = CONFIG_DIR + '/tui_config'
+
 # Versión
 VERSION = '1.0.0-lite'
 

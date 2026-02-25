@@ -137,6 +137,27 @@ def get_default_schedules():
     return schedules
 
 
+def save_theme(theme_id):
+    """Guardar tema seleccionado a archivo de configuración."""
+    import os
+    os.makedirs(os.path.dirname(TUI_CONFIG_FILE), exist_ok=True)
+    with open(TUI_CONFIG_FILE, 'w') as f:
+        f.write(f"theme={theme_id}\n")
+
+
+def load_theme():
+    """Cargar tema desde archivo de configuración."""
+    try:
+        with open(TUI_CONFIG_FILE, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith('theme='):
+                    return line.split('=')[1]
+    except FileNotFoundError:
+        pass
+    return 'dark'  # Tema por defecto
+
+
 def is_daemon_running():
     """Verificar si el daemon de blugon-lite está en ejecución."""
     try:
