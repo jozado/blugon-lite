@@ -1,0 +1,63 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+    remove)
+        # Detener servicio systemd si existe
+        if command -v systemctl > /dev/null 2>&1; then
+            systemctl stop blugon-lite 2>/dev/null || true
+            systemctl disable blugon-lite 2>/dev/null || true
+        fi
+        
+        # Detener init script SysV
+        if [ -x /etc/init.d/blugon-lite ]; then
+            /etc/init.d/blugon-lite stop 2>/dev/null || true
+            if [ -x /usr/sbin/update-rc.d ]; then
+                update-rc.d -f blugon-lite remove 2>/dev/null || true
+            fi
+        fi
+        
+        # Matar cualquier proceso de blugon-lite corriendo
+        if pgrep -f "blugon-lite" > /dev/null 2>&1; then
+            pkill -f "blugon-lite" || true
+        fi
+        ;;
+    
+    deconfigure)
+        # Similar a remove pero sin detener servicio permanentemente
+        if command -v systemctl > /dev/null 2>&1; then
+            systemctl stop blugon-lite 2>/dev/null || true
+        fi
+        
+        if [ -x /etc/init.d/blugon-lite ]; then
+            /etc/init.d/blugon-lite stop 2>/dev/null || true
+        fi
+        
+        if pgrep -f "blugon-lite" > /dev/null 2>&1; then
+            pkill -f "blugon-lite" || true
+        fi
+        ;;
+    
+    purge)
+        # Matar procesos
+        if pgrep -f "blugon-lite" > /dev/null 2>&1; then
+            pkill -f "blugon-lite" || true
+        fi
+        ;;
+    
+    upgrade)
+        # En upgrade, reiniciar el servicio para aplicar cambios
+        if command -v systemctl > /dev/null 2>&1; then
+            systemctl restart blugon-lite 2>/dev/null || true
+        elif [ -x /etc/init.d/blugon-lite ]; then
+            /etc/init.d/blugon-lite restart 2>/dev/null || true
+        fi
+        ;;
+    
+    *)
+        echo "Usage: prerm remove|deconfigure|purge|upgrade" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

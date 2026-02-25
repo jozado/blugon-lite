@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=blugon-lite Daemon
+Comment=Blue Light Filter - Start automatically
+Exec=blugon-lite --interval 120
+Terminal=false
+Type=Application
+Categories=Utility;Settings;
+Icon=blugon-lite
+Keywords=blue light;filter;screen;temperature;
+StartupNotify=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=5

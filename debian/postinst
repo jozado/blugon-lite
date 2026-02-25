@@ -1,0 +1,92 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+    configure)
+        # Crear directorio de configuración del usuario si no existe
+        if [ -d /home ]; then
+            for user_home in /home/*; do
+                if [ -d "$user_home" ]; then
+                    user=$(basename "$user_home")
+                    config_dir="$user_home/.config/blugon"
+                    
+                    # Crear directorio de configuración
+                    if [ ! -d "$config_dir" ]; then
+                        mkdir -p "$config_dir"
+                        chown $user:$user "$config_dir"
+                        chmod 755 "$config_dir"
+                    fi
+                    
+                    # Copiar configuración por defecto si no existe
+                    if [ ! -f "$config_dir/gamma" ]; then
+                        cp /usr/share/blugon-lite/configs/evening/gamma "$config_dir/gamma"
+                        chown $user:$user "$config_dir/gamma"
+                        chmod 644 "$config_dir/gamma"
+                    fi
+                    
+                    # Copiar autostart de XDG si no existe
+                    autostart_dir="$user_home/.config/autostart"
+                    if [ ! -d "$autostart_dir" ]; then
+                        mkdir -p "$autostart_dir"
+                        chown $user:$user "$autostart_dir"
+                    fi
+                    
+                    if [ ! -f "$autostart_dir/blugon-lite.desktop" ]; then
+                        cp /usr/share/applications/blugon-lite-autostart.desktop "$autostart_dir/blugon-lite.desktop"
+                        chown $user:$user "$autostart_dir/blugon-lite.desktop"
+                    fi
+                fi
+            done
+        fi
+        
+        # Habilitar servicio systemd si está disponible
+        if command -v systemctl > /dev/null 2>&1; then
+            # Habilitar servicio para inicio en boot (opcional, no forzado)
+            systemctl daemon-reload || true
+            # No habilitamos automáticamente para no imponer al usuario
+            echo ""
+            echo "Para habilitar el servicio de blugon-lite al inicio:"
+            echo "  sudo systemctl enable blugon-lite"
+            echo "  sudo systemctl start blugon-lite"
+        fi
+        
+        # Habilitar init script SysV si systemd no está disponible
+        if ! command -v systemctl > /dev/null 2>&1; then
+            if [ -x /usr/sbin/update-rc.d ]; then
+                update-rc.d blugon-lite defaults
+            fi
+        fi
+        
+        # Actualizar caché de iconos
+        if [ -x /usr/bin/update-icon-caches ]; then
+            update-icon-caches /usr/share/icons/hicolor 2>/dev/null || true
+        fi
+        
+        # Actualizar caché de desktop
+        if [ -x /usr/bin/update-desktop-database ]; then
+            update-desktop-database /usr/share/applications 2>/dev/null || true
+        fi
+        
+        echo ""
+        echo "blugon-lite instalado exitosamente."
+        echo ""
+        echo "Para comenzar:"
+        echo "  1. Ejecuta 'blugon-lite-tui' para configurar horarios"
+        echo "  2. O ejecuta 'blugon-lite --once' para aplicar el filtro"
+        echo ""
+        echo "Para iniciar automáticamente al boot:"
+        echo "  Systemd: sudo systemctl enable blugon-lite"
+        echo "  SysV:    sudo update-rc.d blugon-lite defaults"
+        echo ""
+        ;;
+    
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+    
+    *)
+        echo "Usage: postinst configure" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

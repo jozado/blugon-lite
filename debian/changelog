@@ -1,0 +1,22 @@
+blugon-lite (1.0.0-lite) unstable; urgency=medium
+
+  * Initial release
+  * Interactive TUI with urwid
+    - Edit, add, delete schedules
+    - Theme support (dark, dracula)
+    - Automatic saving to ~/.config/blugon/gamma
+  * CLI with multiple backends
+    - SCG (Xrandr) - primary backend
+    - xgamma - fallback backend
+  * Preset configurations
+    - evening, office, student, night-owl, minimal
+  * Desktop integration
+    - .desktop file for application menu
+    - SVG icon
+    - Bash completion
+  * Documentation
+    - README.md with usage examples
+    - INSTALL.md with installation guide
+    - Man page (blugon-lite.1)
+
+ -- Jose MS <pepe@DebianPP.monodev.pw>  Tue, 25 Feb 2026 00:00:00 +0000

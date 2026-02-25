@@ -1,0 +1,39 @@
+# Archivos principales
+blugon-lite.py usr/bin/blugon-lite
+blugon-lite-tui usr/bin/blugon-lite-tui
+blugon-lite-tui.py usr/lib/blugon-lite/blugon-lite-tui.py
+
+# Backend SCG
+backends/scg/scg usr/lib/blugon-lite/scg
+
+# TUI modules
+tui/*.py usr/lib/blugon-lite/tui/
+tui/modals/*.py usr/lib/blugon-lite/tui/modals/
+tui/widgets/*.py usr/lib/blugon-lite/tui/widgets/
+
+# Bash completion
+bash-completion/blugon-lite usr/share/bash-completion/completions/blugon-lite
+
+# Man page
+blugon-lite.1 usr/share/man/man1/blugon-lite.1
+blugon-lite.1 usr/share/man/man1/blugon-lite-tui.1
+
+# Desktop files
+blugon-lite.desktop usr/share/applications/blugon-lite.desktop
+blugon-lite-autostart.desktop usr/share/applications/blugon-lite-autostart.desktop
+
+# Icon
+blugon-lite.svg usr/share/icons/hicolor/scalable/apps/blugon-lite.svg
+
+# Systemd service
+debian/blugon-lite.service lib/systemd/system/blugon-lite.service
+
+# SysV init script
+debian/init.d etc/init.d/blugon-lite
+
+# Configuraciones predefinidas
+configs/evening/gamma usr/share/blugon-lite/configs/evening/gamma
+configs/office/gamma usr/share/blugon-lite/configs/office/gamma
+configs/student/gamma usr/share/blugon-lite/configs/student/gamma
+configs/night-owl/gamma usr/share/blugon-lite/configs/night-owl/gamma
+configs/minimal/gamma usr/share/blugon-lite/configs/minimal/gamma

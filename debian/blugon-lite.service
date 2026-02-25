@@ -1,0 +1,22 @@
+[Unit]
+Description=blugon-lite Blue Light Filter Daemon
+After=display-manager.service
+Wants=display-manager.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/blugon-lite --interval 120
+Restart=on-failure
+RestartSec=10
+User=%i
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=blugon-lite
+
+# Environment
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=multi-user.target
