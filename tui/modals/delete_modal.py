@@ -23,15 +23,23 @@ class DeleteConfirmModal:
         self.index = index
         self.schedule = schedule
         self.body = None
+        self.title = "Confirmar Eliminación"
         
         # Establecer este modal como el activo
         self.app.current_modal = self
     
     def build_body(self):
         """Construir el cuerpo del modal."""
+        # Incluir la etiqueta en el mensaje
+        label = self.schedule.get('label', '')
+        if label:
+            mensaje = f"¿Eliminar horario \"{label}\" {self.schedule['time_str']} ({self.schedule['temp_str']})?"
+        else:
+            mensaje = f"¿Eliminar horario {self.schedule['time_str']} ({self.schedule['temp_str']})?"
+        
         self.body = urwid.Pile([
             urwid.Text(""),
-            urwid.Text(f"¿Eliminar horario {self.schedule['time_str']} ({self.schedule['temp_str']})?"),
+            urwid.Text(mensaje),
             urwid.Divider(),
             urwid.Button("Sí, eliminar", lambda b: self.confirm()),
             urwid.Button("No, cancelar", lambda b: self.cancel()),
@@ -41,43 +49,41 @@ class DeleteConfirmModal:
     
     def handle_input(self, key):
         """
-        Manejar entrada de teclado.
+        Manejar entrada de teclado en el modal de eliminación.
         
         Args:
             key: Tecla presionada
-            
-        Returns:
-            bool: True si se consumió la tecla
         """
-        if self.body is None:
-            return False
+        # ESC cierra el modal
+        if key in ('esc', 'escape'):
+            self.cancel()
+            return
         
+        if self.body is None:
+            return
+        
+        focus = self.body.get_focus()
+        
+        # Navegación con flechas
         if key in ('up', 'cursor up'):
-            focus = self.body.get_focus()
-            if focus == 3:
-                self.body.set_focus(4)
-            elif focus == 4:
-                self.body.set_focus(3)
-            return True
+            if focus == 3:  # Botón "Sí"
+                self.body.set_focus(4)  # Ir a "No"
+            elif focus == 4:  # Botón "No"
+                self.body.set_focus(3)  # Ir a "Sí"
+            return
         elif key in ('down', 'cursor down'):
-            focus = self.body.get_focus()
-            if focus == 4:
-                self.body.set_focus(3)
-            elif focus == 3:
-                self.body.set_focus(4)
-            return True
+            if focus == 4:  # Botón "No"
+                self.body.set_focus(3)  # Ir a "Sí"
+            elif focus == 3:  # Botón "Sí"
+                self.body.set_focus(4)  # Ir a "No"
+            return
+        # Enter ejecuta el botón seleccionado
         elif key == 'enter':
-            focus = self.body.get_focus()
             if focus == 3:
                 self.confirm()
             elif focus == 4:
                 self.cancel()
-            return True
-        elif key == 'esc':
-            self.cancel()
-            return True
-        
-        return False
+            return
     
     def confirm(self):
         """Confirmar eliminación."""
