@@ -22,6 +22,8 @@ class EditScheduleModal:
             schedule: Datos del horario a editar
         """
         self.app = app
+        self.index = index
+        self.schedule = schedule
         
         # Establecer este modal como el activo
         self.app.current_modal = self
@@ -113,96 +115,12 @@ class EditScheduleModal:
     
     def handle_input(self, key):
         """
-        Manejar entrada de teclado en el modal de edición.
+        Manejar entrada de teclado delegando al input_handler.
         
         Args:
             key: Tecla presionada
         """
-        # ESC cierra el modal
-        if key in ('esc', 'escape'):
-            self.cancel()
-            return
-        
-        changed = False
-        field = self.app.edit_field_selected
-        
-        # Navegación entre campos
-        if key in ('up', 'cursor up'):
-            if field > 0:
-                self.app.edit_field_selected = field - 1
-                changed = True
-        elif key in ('down', 'cursor down'):
-            if field < 5:
-                self.app.edit_field_selected = field + 1
-                changed = True
-        elif key == 'tab':
-            # Tab va a botones o alterna entre ellos
-            if field >= 4:
-                self.app.edit_field_selected = 5 if field == 4 else 4
-            else:
-                self.app.edit_field_selected = 4
-            changed = True
-        elif key == 'shift tab':
-            # Shift+Tab navega hacia atrás
-            if field > 0:
-                self.app.edit_field_selected = field - 1
-            changed = True
-        # Ajuste de valores con flechas laterales
-        elif key in ('left', 'cursor left'):
-            if field >= 4:
-                self.app.edit_field_selected = 5 if field == 4 else 4
-                changed = True
-            elif field == 0:  # Hora
-                self.app.edit_hour_val = (self.app.edit_hour_val - 1) % 24
-                changed = True
-            elif field == 1:  # Minuto
-                self.app.edit_minute_val = (self.app.edit_minute_val - 5) % 60
-                changed = True
-            elif field == 2:  # Temperatura
-                self.app.edit_temp_val = max(1000, self.app.edit_temp_val - 100)
-                changed = True
-        elif key in ('right', 'cursor right'):
-            if field >= 4:
-                self.app.edit_field_selected = 4 if field == 5 else 5
-                changed = True
-            elif field == 0:  # Hora
-                self.app.edit_hour_val = (self.app.edit_hour_val + 1) % 24
-                changed = True
-            elif field == 1:  # Minuto
-                self.app.edit_minute_val = (self.app.edit_minute_val + 5) % 60
-                changed = True
-            elif field == 2:  # Temperatura
-                self.app.edit_temp_val = min(20000, self.app.edit_temp_val + 100)
-                changed = True
-        # Enter para guardar/cancelar
-        elif key == 'enter':
-            if field == 4:
-                self.save()
-                return
-            elif field == 5:
-                self.cancel()
-                return
-            elif field < 3:
-                self.save()
-                return
-        # Edición de etiqueta (campo 3)
-        elif field == 3:
-            if key in ('backspace', 'ctrl h'):
-                if self.app.edit_label_val:
-                    self.app.edit_label_val = self.app.edit_label_val[:-1]
-                    changed = True
-            elif key in ('delete', 'ctrl d'):
-                self.app.edit_label_val = ""
-                changed = True
-            elif len(key) == 1 and key.isprintable():
-                if len(self.app.edit_label_val) < 20:
-                    self.app.edit_label_val += key
-                    changed = True
-        
-        if changed:
-            self.app.edit_color_preview.update(self.app.edit_temp_val)
-            self.app.edit_schedule(self.app.edit_index)
-            self.app.loop.draw_screen()
+        self.app.input_handler.handle_modal_input(key)
     
     def save(self):
         """Guardar los cambios."""

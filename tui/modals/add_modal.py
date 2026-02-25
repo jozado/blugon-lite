@@ -109,96 +109,12 @@ class AddScheduleModal:
     
     def handle_input(self, key):
         """
-        Manejar entrada de teclado en el modal de agregado.
+        Manejar entrada de teclado delegando al input_handler.
         
         Args:
             key: Tecla presionada
         """
-        # ESC cierra el modal
-        if key in ('esc', 'escape'):
-            self.cancel()
-            return
-        
-        changed = False
-        field = self.app.add_field_selected
-        
-        # Navegación entre campos
-        if key in ('up', 'cursor up'):
-            if field > 0:
-                self.app.add_field_selected = field - 1
-                changed = True
-        elif key in ('down', 'cursor down'):
-            if field < 5:
-                self.app.add_field_selected = field + 1
-                changed = True
-        elif key == 'tab':
-            # Tab va a botones o alterna entre ellos
-            if field >= 4:
-                self.app.add_field_selected = 5 if field == 4 else 4
-            else:
-                self.app.add_field_selected = 4
-            changed = True
-        elif key == 'shift tab':
-            # Shift+Tab navega hacia atrás
-            if field > 0:
-                self.app.add_field_selected = field - 1
-            changed = True
-        # Ajuste de valores con flechas laterales
-        elif key in ('left', 'cursor left'):
-            if field >= 4:
-                self.app.add_field_selected = 5 if field == 4 else 4
-                changed = True
-            elif field == 0:  # Hora
-                self.app.add_hour = (self.app.add_hour - 1) % 24
-                changed = True
-            elif field == 1:  # Minuto
-                self.app.add_minute = (self.app.add_minute - 5) % 60
-                changed = True
-            elif field == 2:  # Temperatura
-                self.app.add_temp = max(1000, self.app.add_temp - 100)
-                changed = True
-        elif key in ('right', 'cursor right'):
-            if field >= 4:
-                self.app.add_field_selected = 4 if field == 5 else 5
-                changed = True
-            elif field == 0:  # Hora
-                self.app.add_hour = (self.app.add_hour + 1) % 24
-                changed = True
-            elif field == 1:  # Minuto
-                self.app.add_minute = (self.app.add_minute + 5) % 60
-                changed = True
-            elif field == 2:  # Temperatura
-                self.app.add_temp = min(20000, self.app.add_temp + 100)
-                changed = True
-        # Enter para agregar/cancelar
-        elif key == 'enter':
-            if field == 4:
-                self.save()
-                return
-            elif field == 5:
-                self.cancel()
-                return
-            elif field < 3:
-                self.save()
-                return
-        # Edición de etiqueta (campo 3)
-        elif field == 3:
-            if key in ('backspace', 'ctrl h'):
-                if self.app.add_label_val:
-                    self.app.add_label_val = self.app.add_label_val[:-1]
-                    changed = True
-            elif key in ('delete', 'ctrl d'):
-                self.app.add_label_val = ""
-                changed = True
-            elif len(key) == 1 and key.isprintable():
-                if len(self.app.add_label_val) < 20:
-                    self.app.add_label_val += key
-                    changed = True
-        
-        if changed:
-            self.app.add_color_preview.update(self.app.add_temp)
-            self.app.add_schedule()
-            self.app.loop.draw_screen()
+        self.app.input_handler.handle_modal_input(key)
     
     def save(self):
         """Guardar el nuevo horario."""

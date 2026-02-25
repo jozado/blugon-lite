@@ -52,10 +52,13 @@ class InputHandler:
             function: Función input_filter para urwid
         """
         def input_filter(keys, raw):
-            # Si hay modal abierto, consumir todas las teclas
-            # El modal ya las maneja directamente via su handle_input
+            # Si hay modal abierto, procesar TODAS las teclas aquí
             if hasattr(self.app, 'modal_open') and self.app.modal_open:
-                return []  # Consumir todas las teclas
+                for key in keys:
+                    # Todas las teclas van al handler del modal
+                    self.app.handle_modal_input(key)
+                # Consumir TODAS las teclas (no pasar ninguna al widget)
+                return []
 
             # Pantalla principal: consumir flechas para navegación
             for key in keys:
