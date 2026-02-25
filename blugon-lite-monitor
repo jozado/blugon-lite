@@ -1,0 +1,50 @@
+#!/bin/bash
+# blugon-lite-monitor - Ver estado y logs del daemon en tiempo real
+
+LOG_FILE="/tmp/blugon-lite-${USER}.log"
+
+echo "=== blugon-lite Monitor ==="
+echo ""
+
+# Verificar si el daemon está corriendo
+if pgrep -f "blugon-lite --interval" > /dev/null; then
+    PID=$(pgrep -f "blugon-lite --interval")
+    echo "✓ Daemon CORRIENDO (PID: $PID)"
+else
+    echo "✗ Daemon NO está corriendo"
+    echo ""
+    echo "Para iniciar el daemon:"
+    echo "  blugon-lite --interval 120 &"
+    exit 1
+fi
+
+# Mostrar configuración actual
+echo ""
+echo "=== Configuración ==="
+echo "Archivo de configuración: ~/.config/blugon/gamma"
+if [ -f ~/.config/blugon/gamma ]; then
+    echo "Horarios configurados:"
+    grep -v "^#" ~/.config/blugon/gamma | grep -v "^$" | head -5
+    echo "  ..."
+fi
+
+echo ""
+echo "=== Últimos 15 logs ==="
+if [ -f "$LOG_FILE" ]; then
+    tail -15 "$LOG_FILE"
+else
+    echo "No hay archivo de log en $LOG_FILE"
+    echo "El daemon probablemente se inició antes de que se agregara logging."
+fi
+
+echo ""
+echo "=== ¿Seguir logs en tiempo real? (Ctrl+C para salir) ==="
+if [ -f "$LOG_FILE" ]; then
+    echo "Presiona Ctrl+C para salir del seguimiento..."
+    sleep 2
+    tail -f "$LOG_FILE"
+else
+    echo "Esperando logs..."
+    sleep 2
+    tail -f "$LOG_FILE"
+fi

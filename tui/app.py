@@ -146,6 +146,13 @@ class BlugonLiteTUI:
 
         return urwid.AttrMap(header_text, 'header')
 
+    def refresh_status(self):
+        """Actualizar el estado del daemon en la UI."""
+        self.daemon_active = is_daemon_running()
+        # Reconstruir el header para actualizar el estado
+        self.main_frame.contents['header'] = (self._create_header(), self.main_frame.options())
+        self.loop.draw_screen()
+
     def _create_info_panel(self):
         """Crear panel de información con hora y próxima transición."""
         now = datetime.now()
@@ -583,13 +590,34 @@ class BlugonLiteTUI:
         self.loop.draw_screen()
 
     def save_config(self):
-        """Guardar configuración a archivo."""
+        """Guardar configuración a archivo y reiniciar el daemon si está corriendo."""
         try:
+            old_daemon_state = is_daemon_running()
+            
             write_gamma_file(CONFIG_FILE, self.schedules)
             self.unsaved_changes = False
             self.modified = True
             self.refresh_schedule_list()
-            self.show_message(f"Guardado en {CONFIG_FILE}", 'success')
+            
+            # Reiniciar daemon si estaba corriendo para aplicar cambios
+            if old_daemon_state:
+                import subprocess
+                # Matar daemon existente
+                subprocess.run(['pkill', '-f', 'blugon-lite --interval'], capture_output=True)
+                import time
+                time.sleep(0.5)
+                # Iniciar nuevo daemon con la nueva configuración
+                subprocess.Popen(
+                    ['/usr/bin/blugon-lite', '--interval', '120'],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True
+                )
+                self.daemon_active = True
+                self.refresh_status()
+                self.show_message("Guardado y daemon reiniciado", 'success')
+            else:
+                self.show_message(f"Guardado en {CONFIG_FILE}", 'success')
         except Exception as e:
             self.show_message(f"Error al guardar: {e}", 'error')
 
