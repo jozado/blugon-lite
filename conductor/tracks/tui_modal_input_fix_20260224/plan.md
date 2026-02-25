@@ -86,7 +86,15 @@
 
 ---
 
-## Fase 5: Testing Manual [checkpoint: f7fb942]
+## Fase 5: Testing Manual [checkpoint: 7cc14c1]
+
+**REFACTORIZACIÓN COMPLETADA:**
+
+- [x] Task: Refactorizar código para mejor mantenibilidad
+    - [x] Crear tui/input_handler.py
+    - [x] Crear tui/modals/base.py
+    - [x] Reducir app.py de 1100 a ~700 líneas
+    - [x] Separar responsabilidades claramente
 
 - [ ] Task: Probar edición de etiqueta
     - [ ] Escribir texto "Mi Horario"
