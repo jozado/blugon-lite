@@ -90,7 +90,7 @@ class InputHandler:
         """
         # Debug: log de teclas en modal
         with open('/tmp/tui_debug.log', 'a') as f:
-            f.write(f'HANDLE_MODAL_INPUT: key={repr(key)}, edit_index={hasattr(self.app, "edit_index")}, add_hour={hasattr(self.app, "add_hour")}\n')
+            f.write(f'HANDLE_MODAL_INPUT: key={repr(key)}, edit_index={hasattr(self.app, "edit_index")}, add_hour={hasattr(self.app, "add_hour")}, delete_confirm={hasattr(self.app, "delete_confirm_open")}\n')
             f.flush()
 
         # ESC siempre cierra el modal
@@ -101,10 +101,20 @@ class InputHandler:
         # Determinar tipo de modal
         is_edit = hasattr(self.app, 'edit_index')
         is_add = hasattr(self.app, 'add_hour')
+        is_delete = hasattr(self.app, 'delete_confirm_open')
+
+        # Modal de eliminación se maneja directamente
+        if is_delete and not is_edit and not is_add:
+            with open('/tmp/tui_debug.log', 'a') as f:
+                f.write('ES MODAL DE ELIMINACION, DELEGO AL MODAL\n')
+                f.flush()
+            if hasattr(self.app, 'current_modal') and self.app.current_modal:
+                self.app.current_modal.handle_input(key)
+            return
 
         if not is_edit and not is_add:
             with open('/tmp/tui_debug.log', 'a') as f:
-                f.write('NO ES EDIT NI ADD, RETORNO\n')
+                f.write('NO ES EDIT NI ADD NI DELETE, RETORNO\n')
                 f.flush()
             return
 
