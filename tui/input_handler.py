@@ -102,11 +102,12 @@ class InputHandler:
         is_edit = hasattr(self.app, 'edit_index')
         is_add = hasattr(self.app, 'add_hour')
         is_delete = hasattr(self.app, 'delete_confirm_open')
+        is_theme = hasattr(self.app, 'theme_selector_open')
 
-        # Modal de eliminación se maneja directamente
-        if is_delete and not is_edit and not is_add:
+        # Modal de eliminación o temas se maneja directamente
+        if (is_delete or is_theme) and not is_edit and not is_add:
             with open('/tmp/tui_debug.log', 'a') as f:
-                f.write('ES MODAL DE ELIMINACION, DELEGO AL MODAL\n')
+                f.write(f'ES MODAL DE ELIMINACION O TEMAS, DELEGO AL MODAL\n')
                 f.write(f'current_modal exists: {hasattr(self.app, "current_modal")}\n')
                 f.write(f'current_modal: {self.app.current_modal if hasattr(self.app, "current_modal") else None}\n')
                 f.flush()

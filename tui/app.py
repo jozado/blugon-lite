@@ -18,7 +18,7 @@ from .utils import (
     get_label_for_time,
 )
 from .widgets import ColorPreview, ScheduleItem
-from .modals import ModalOverlay, EditScheduleModal, AddScheduleModal, DeleteConfirmModal
+from .modals import ModalOverlay, EditScheduleModal, AddScheduleModal, DeleteConfirmModal, ThemeSelectorModal
 from .input_handler import InputHandler
 
 
@@ -590,44 +590,15 @@ class BlugonLiteTUI:
 
     def show_theme_selector(self):
         """Mostrar selector de temas."""
-        theme_buttons = []
-        for theme_id, (theme_name, _) in THEMES.items():
-            btn = urwid.Button(theme_name, lambda b, tid=theme_id: self.select_theme(tid))
-            theme_buttons.append(btn)
-
-        body = urwid.Pile([
-            urwid.AttrMap(urwid.Text("Seleccionar Tema"), 'header'),
-            urwid.Divider(),
-        ] + theme_buttons + [
-            urwid.Divider(),
-            urwid.Button("Cancelar", lambda b: self.cancel_theme()),
-        ])
+        modal = ThemeSelectorModal(self)
+        body = modal.build_body()
 
         def modal_keypress(key):
-            if key == 'esc':
-                self.cancel_theme()
-                return None
-            return key
+            return modal.handle_input(key)
 
-        self.loop.widget = ModalOverlay(body, "Temas", width=40, height=14, on_keypress=modal_keypress)
+        overlay = ModalOverlay(body, "Temas", width=40, height=14, on_keypress=modal_keypress)
+        self.loop.widget = overlay
         self.modal_open = True
-        self.theme_selector_open = True
-
-    def select_theme(self, theme_id):
-        """Seleccionar y aplicar un tema."""
-        self.theme_selector_open = False
-        self.modal_open = False
-        if theme_id in THEMES:
-            self.loop.screen.register_palette(THEMES[theme_id][1])
-            self.current_theme = theme_id
-            self.show_message(f"Tema cambiado a {theme_id}", 'success')
-        self.loop.widget = self.main_frame
-
-    def cancel_theme(self):
-        """Cancelar selección de tema."""
-        self.theme_selector_open = False
-        self.modal_open = False
-        self.loop.widget = self.main_frame
 
     def run(self):
         """Ejecutar el TUI."""
