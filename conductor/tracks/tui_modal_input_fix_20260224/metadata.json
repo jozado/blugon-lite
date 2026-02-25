@@ -1,0 +1,16 @@
+{
+  "track_id": "tui_modal_input_fix_20260224",
+  "title": "Reparar bugs de input del modal de edición del TUI",
+  "status": "pending",
+  "priority": "HIGH",
+  "parent_track": "blugon_deb_20260223",
+  "created_at": "2026-02-24",
+  "description": "Reparar los bugs del modal de edición/agregado relacionados con entrada de texto, Backspace, Delete y Enter en botones",
+  "bugs": [
+    "No se puede escribir texto en campo Etiqueta",
+    "Backspace no borra carácter por carácter",
+    "Delete no borra todo el contenido",
+    "Enter no funciona en botones Guardar/Cancelar"
+  ],
+  "root_cause": "El input_filter captura teclas antes de llegar al modal y handle_modal_input no procesa correctamente todas las teclas de texto"
+}

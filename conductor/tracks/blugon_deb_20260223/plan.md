@@ -103,16 +103,20 @@
 
 ## Fase 4: Testing Manual del Conjunto [checkpoint: ]
 
-- [ ] Task: Testing de blugon-lite.py auto-configurable
-    - [ ] Probar sin ~/.config/blugon/gamma
-    - [ ] Probar con config de usuario
-    - [ ] Probar fallback a config del sistema
-    - [ ] Probar fallback hardcodeado
-    - [ ] Verificar --once funciona
-    - [ ] Verificar --interval funciona
-    - [ ] Verificar --backend funciona
+**BUG ENCONTRADO:** El modal de edición no permite escribir texto con el teclado, ni usar Backspace/Delete, ni Enter en botones.
 
-- [ ] Task: Testing de blugon-lite-tui
+*Solución:* Se creó subtrack `tui_modal_input_fix_20260224` para reparar estos bugs antes de continuar con el testing.
+
+- [x] Task: Testing de blugon-lite.py auto-configurable
+    - [x] Probar sin ~/.config/blugon/gamma
+    - [x] Probar con config de usuario
+    - [x] Probar fallback a config del sistema
+    - [x] Probar fallback hardcodeado
+    - [x] Verificar --once funciona
+    - [x] Verificar --interval funciona
+    - [x] Verificar --backend funciona
+
+- [~] Task: Testing de blugon-lite-tui (BLOQUEADO por bugs de input)
     - [ ] Probar navegación con teclado
     - [ ] Probar edición de horarios
     - [ ] Probar agregar/eliminar horarios
@@ -126,8 +130,11 @@
     - [ ] Múltiples configs predefinidas cargan bien
     - [ ] Probar flujo completo: instalar → TUI → usar
 
-- [ ] Task: Corregir bugs encontrados
-    - [ ] Listar bugs encontrados
+- [~] Task: Corregir bugs encontrados
+    - [x] Listar bugs encontrados (modal input)
+    - [ ] Reparar bugs de edición de texto
+    - [ ] Reparar bugs de Backspace/Delete
+    - [ ] Reparar bugs de Enter en botones
     - [ ] Priorizar por severidad
     - [ ] Corregir bugs críticos
     - [ ] Corregir bugs menores si hay tiempo
