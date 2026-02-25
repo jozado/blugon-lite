@@ -119,10 +119,26 @@ class BlugonLiteTUI:
         self.loop = urwid.MainLoop(
             self.main_frame,
             palette=PALETTE_DARK,
-            unhandled_input=self.handle_input,
+            unhandled_input=self.handle_unhandled_input,
             input_filter=self.input_handler.create_input_filter(),
             handle_mouse=False
         )
+
+    def handle_unhandled_input(self, key):
+        """
+        Manejar teclas no consumidas por el input_filter.
+        
+        Cuando hay modal abierto, pasar las teclas al modal.
+        """
+        # Si hay modal abierto, pasar teclas al modal
+        if hasattr(self, 'modal_open') and self.modal_open:
+            # El modal actual maneja la tecla
+            if hasattr(self, 'current_modal') and self.current_modal:
+                self.current_modal.handle_input(key)
+            return
+        
+        # Pantalla principal: manejar teclas normales
+        self.handle_input(key)
 
     def _create_header(self):
         """Crear header con estado del daemon."""

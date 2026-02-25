@@ -52,24 +52,10 @@ class InputHandler:
             function: Función input_filter para urwid
         """
         def input_filter(keys, raw):
-            # Debug: log de teclas
-            with open('/tmp/tui_debug.log', 'a') as f:
-                f.write(f'INPUT_FILTER: keys={keys}, modal_open={getattr(self.app, "modal_open", False)}\n')
-                f.flush()
-            
-            # Si hay modal abierto, procesar TODAS las teclas aquí
+            # Si hay modal abierto, consumir todas las teclas
+            # El modal ya las maneja directamente via su handle_input
             if hasattr(self.app, 'modal_open') and self.app.modal_open:
-                for key in keys:
-                    if key in ('esc', 'escape'):
-                        # ESC cierra el modal - delegar al modal actual
-                        if self.current_modal:
-                            self.current_modal.handle_input(key)
-                    else:
-                        # Todas las demás teclas van al modal actual
-                        if self.current_modal:
-                            self.current_modal.handle_input(key)
-                # Consumir TODAS las teclas (no pasar ninguna al widget)
-                return []
+                return []  # Consumir todas las teclas
 
             # Pantalla principal: consumir flechas para navegación
             for key in keys:
