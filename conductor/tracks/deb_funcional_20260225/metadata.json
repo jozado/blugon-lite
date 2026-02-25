@@ -1,0 +1,19 @@
+{
+  "track_id": "deb_funcional_20260225",
+  "title": "Crear deb funcional",
+  "status": "pending",
+  "priority": "CRITICAL",
+  "parent_track": "blugon_deb_20260223",
+  "created_at": "2026-02-25T03:30:00Z",
+  "description": "Crear un paquete .deb completamente funcional que se instale y desinstale limpiamente, con daemon funcionando correctamente",
+  "problems": [
+    "Desinstalación sucia - comando apt purge se cuelga al 20%",
+    "Paquete queda en estado rF (removal requested, failed)",
+    "Daemon no es detectado por el TUI",
+    "Servicio systemd tiene error 'bad unit file setting'",
+    "Lanzador de autoinicio no funciona"
+  ],
+  "files_to_read_first": [
+    "HALLAZGOS_Y_PROBLEMAS.md"
+  ]
+}
