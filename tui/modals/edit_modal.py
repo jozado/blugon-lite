@@ -24,6 +24,7 @@ class EditScheduleModal:
         self.app = app
         self.index = index
         self.schedule = schedule
+        self.title = "Editar Horario"
         
         # Establecer este modal como el activo
         self.app.current_modal = self

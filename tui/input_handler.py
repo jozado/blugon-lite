@@ -7,6 +7,7 @@ tanto para la pantalla principal como para los modales.
 """
 
 import urwid
+from .modals import ModalOverlay
 
 
 class InputHandler:
@@ -77,41 +78,48 @@ class InputHandler:
     def handle_modal_input(self, key):
         """
         Procesar entrada de teclado dentro del modal.
-        
+
         Maneja:
         - Navegación entre campos (up, down, tab, shift+tab)
         - Modificación de valores numéricos (left, right)
         - Edición de texto (caracteres imprimibles, backspace, delete)
         - Acciones (enter, escape)
-        
+
         Args:
             key: La tecla presionada
         """
         # Debug: log de teclas en modal
         with open('/tmp/tui_debug.log', 'a') as f:
-            f.write(f'HANDLE_MODAL_INPUT: key={repr(key)}\n')
+            f.write(f'HANDLE_MODAL_INPUT: key={repr(key)}, edit_index={hasattr(self.app, "edit_index")}, add_hour={hasattr(self.app, "add_hour")}\n')
             f.flush()
-        
+
         # ESC siempre cierra el modal
         if key in ('esc', 'escape'):
             self._close_modal()
             return
-        
+
         # Determinar tipo de modal
         is_edit = hasattr(self.app, 'edit_index')
         is_add = hasattr(self.app, 'add_hour')
-        
+
         if not is_edit and not is_add:
+            with open('/tmp/tui_debug.log', 'a') as f:
+                f.write('NO ES EDIT NI ADD, RETORNO\n')
+                f.flush()
             return
-        
+
         changed = False
         rebuild = False
-        
+
         # Obtener campo seleccionado
         if is_edit:
             field_selected = getattr(self.app, 'edit_field_selected', 0)
         else:
             field_selected = getattr(self.app, 'add_field_selected', 0)
+
+        with open('/tmp/tui_debug.log', 'a') as f:
+            f.write(f'field_selected={field_selected}, is_edit={is_edit}, is_add={is_add}\n')
+            f.flush()
         
         # Procesar tecla según el campo y tipo de modal
         if key in ('up', 'cursor up'):
@@ -330,12 +338,23 @@ class InputHandler:
     def _update_modal(self):
         """Actualizar vista previa y redibujar modal."""
         is_edit = hasattr(self.app, 'edit_index')
-        
+
+        # Actualizar la vista previa de color
         if is_edit:
             self.app.edit_color_preview.update(self.app.edit_temp_val)
-            self.app.edit_schedule(self.app.edit_index)
         else:
             self.app.add_color_preview.update(self.app.add_temp)
-            self.app.add_schedule()
-        
+
+        # Reconstruir el body del modal actual
+        if hasattr(self.app, 'current_modal') and self.app.current_modal:
+            new_body = self.app.current_modal.build_body()
+            # Reemplazar el body del overlay
+            self.app.loop.widget = ModalOverlay(
+                new_body,
+                self.app.current_modal.title if hasattr(self.app.current_modal, 'title') else "Editar Horario",
+                width=('relative', 90),
+                height=('relative', 90),
+                on_keypress=lambda key: self.app.current_modal.handle_input(key)
+            )
+
         self.app.loop.draw_screen()

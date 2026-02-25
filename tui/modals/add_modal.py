@@ -19,6 +19,7 @@ class AddScheduleModal:
             app: Referencia a la aplicación principal
         """
         self.app = app
+        self.title = "Agregar Horario"
         
         # Establecer este modal como el activo
         self.app.current_modal = self
