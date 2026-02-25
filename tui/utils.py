@@ -3,7 +3,7 @@
 
 import math
 import subprocess
-from .config import DEFAULT_CONFIG
+from .config import DEFAULT_CONFIG, TUI_CONFIG_FILE
 
 
 def temp_to_rgb(temp):
