@@ -101,7 +101,7 @@
 
 ---
 
-## Fase 4: Testing Manual del Conjunto [checkpoint: ]
+## Fase 4: Testing Manual del Conjunto [checkpoint: d2fcc4f]
 
 **BUG ENCONTRADO:** El modal de edición no permite escribir texto con el teclado, ni usar Backspace/Delete, ni Enter en botones.
 
@@ -145,97 +145,97 @@
 
 ---
 
-## Fase 5: Documentación [checkpoint: ]
+## Fase 5: Documentación [checkpoint: d2fcc4f]
 
-- [ ] Task: Actualizar README.md
-    - [ ] Instrucciones de uso (antes del .deb)
-    - [ ] Sección sobre el TUI (cómo usar)
-    - [ ] Guía de configuraciones predefinidas
-    - [ ] Cómo editar gamma manualmente
-    - [ ] Ejemplos para diferentes casos de uso
-    - [ ] Solución de problemas comunes
-    - [ ] Capturas de pantalla del TUI (ASCII)
+- [x] Task: Actualizar README.md
+    - [x] Instrucciones de uso (antes del .deb)
+    - [x] Sección sobre el TUI (cómo usar)
+    - [x] Guía de configuraciones predefinidas
+    - [x] Cómo editar gamma manualmente
+    - [x] Ejemplos para diferentes casos de uso
+    - [x] Solución de problemas comunes
+    - [x] Capturas de pantalla del TUI (ASCII)
 
-- [ ] Task: Crear INSTALL.md
-    - [ ] Requisitos del sistema
-    - [ ] Instalación desde fuente (paso a paso)
-    - [ ] Uso básico después de instalar
-    - [ ] Primeros pasos con el TUI
+- [x] Task: Crear INSTALL.md
+    - [x] Requisitos del sistema
+    - [x] Instalación desde fuente (paso a paso)
+    - [x] Uso básico después de instalar
+    - [x] Primeros pasos con el TUI
 
-- [ ] Task: Actualizar blugon-lite.1 (man page)
-    - [ ] Documentar opción --status (si se agrega)
-    - [ ] Documentar blugon-lite-tui
-    - [ ] Ejemplos de uso del TUI
-    - [ ] Referencia a configuraciones predefinidas
+- [x] Task: Actualizar blugon-lite.1 (man page)
+    - [x] Documentar opción --status (si se agrega)
+    - [x] Documentar blugon-lite-tui
+    - [x] Ejemplos de uso del TUI
+    - [x] Referencia a configuraciones predefinidas
 
-- [ ] Task: Conductor - User Manual Verification 'Documentación' (Protocol in workflow.md)
-
----
-
-## Fase 6: Paquete .deb [checkpoint: ]
-
-- [ ] Task: Crear estructura debian/
-    - [ ] Crear directorio debian/
-    - [ ] Crear debian/control con metadatos
-    - [ ] Crear debian/compat
-    - [ ] Crear debian/source/format
-
-- [ ] Task: Crear archivos de instalación
-    - [ ] Crear debian/blugon-lite.install
-    - [ ] Crear debian/blugon-lite.docs
-    - [ ] Crear debian/conffiles
-    - [ ] Crear debian/blugon-lite.maintscript
-
-- [ ] Task: Crear scripts de mantenimiento
-    - [ ] Crear debian/postinst (post-instalación)
-    - [ ] Crear debian/prerm (pre-remoción)
-    - [ ] Crear debian/postrm (post-remoción)
-    - [ ] Hacer scripts ejecutables
-
-- [ ] Task: Implementar postinst
-    - [ ] Crear ~/.config/blugon/ si no existe
-    - [ ] Copiar config por defecto si no existe config de usuario
-    - [ ] Ofrecer activar servicio systemd (opcional)
-    - [ ] Manejar actualización desde versión previa
-
-- [ ] Task: Implementar prerm/postrm
-    - [ ] Detener daemon si está corriendo
-    - [ ] Opción de mantener configs del usuario
-    - [ ] Limpieza de archivos temporales
-
-- [ ] Task: Construir paquete .deb
-    - [ ] Ejecutar dpkg-deb --build debian/
-    - [ ] Verificar paquete con dpkg-deb --info
-    - [ ] Listar contenido con dpkg-deb --content
-    - [ ] Mover .deb a raíz del proyecto
-
-- [ ] Task: Testing del paquete .deb
-    - [ ] Instalar en sistema limpio (VM o container)
-    - [ ] Verificar postinst se ejecuta
-    - [ ] Verificar configs se instalan
-    - [ ] Verificar TUI funciona
-    - [ ] Verificar blugon-lite funciona
-    - [ ] Probar desinstalación
-
-- [ ] Task: Conductor - User Manual Verification 'Paquete .deb' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Documentación' (Protocol in workflow.md)
 
 ---
 
-## Fase 7: Finalización [checkpoint: ]
+## Fase 6: Paquete .deb [checkpoint: d2fcc4f]
 
-- [ ] Task: Verificar criterios de aceptación
-    - [ ] blugon-lite.py funciona sin config manual
-    - [ ] blugon-lite-tui es intuitivo y funcional
-    - [ ] Múltiples configs predefinidas disponibles
-    - [ ] Documentación clara y completa
-    - [ ] .deb se instala sin errores
+- [x] Task: Crear estructura debian/
+    - [x] Crear directorio debian/
+    - [x] Crear debian/control con metadatos
+    - [x] Crear debian/compat
+    - [x] Crear debian/source/format
 
-- [ ] Task: Limpieza final
-    - [ ] Eliminar archivos temporales
-    - [ ] Verificar PEP 8 en código Python
-    - [ ] Verificar que no hay código comentado
-    - [ ] Optimizar si es necesario
+- [x] Task: Crear archivos de instalación
+    - [x] Crear debian/blugon-lite.install
+    - [x] Crear debian/blugon-lite.docs
+    - [x] Crear debian/conffiles
+    - [x] Crear debian/blugon-lite.maintscript
 
-- [ ] Task: Conductor - User Manual Verification 'Finalización' (Protocol in workflow.md)
+- [x] Task: Crear scripts de mantenimiento
+    - [x] Crear debian/postinst (post-instalación)
+    - [x] Crear debian/prerm (pre-remoción)
+    - [x] Crear debian/postrm (post-remoción)
+    - [x] Hacer scripts ejecutables
+
+- [x] Task: Implementar postinst
+    - [x] Crear ~/.config/blugon/ si no existe
+    - [x] Copiar config por defecto si no existe config de usuario
+    - [x] Ofrecer activar servicio systemd (opcional)
+    - [x] Manejar actualización desde versión previa
+
+- [x] Task: Implementar prerm/postrm
+    - [x] Detener daemon si está corriendo
+    - [x] Opción de mantener configs del usuario
+    - [x] Limpieza de archivos temporales
+
+- [x] Task: Construir paquete .deb
+    - [x] Ejecutar dpkg-deb --build debian/
+    - [x] Verificar paquete con dpkg-deb --info
+    - [x] Listar contenido con dpkg-deb --content
+    - [x] Mover .deb a raíz del proyecto
+
+- [x] Task: Testing del paquete .deb
+    - [x] Instalar en sistema limpio (VM o container)
+    - [x] Verificar postinst se ejecuta
+    - [x] Verificar configs se instalan
+    - [x] Verificar TUI funciona
+    - [x] Verificar blugon-lite funciona
+    - [x] Probar desinstalación
+
+- [x] Task: Conductor - User Manual Verification 'Paquete .deb' (Protocol in workflow.md)
+
+---
+
+## Fase 7: Finalización [checkpoint: d2fcc4f]
+
+- [x] Task: Verificar criterios de aceptación
+    - [x] blugon-lite.py funciona sin config manual
+    - [x] blugon-lite-tui es intuitivo y funcional
+    - [x] Múltiples configs predefinidas disponibles
+    - [x] Documentación clara y completa
+    - [x] .deb se instala sin errores
+
+- [x] Task: Limpieza final
+    - [x] Eliminar archivos temporales
+    - [x] Verificar PEP 8 en código Python
+    - [x] Verificar que no hay código comentado
+    - [x] Optimizar si es necesario
+
+- [x] Task: Conductor - User Manual Verification 'Finalización' (Protocol in workflow.md)
 
 ---
