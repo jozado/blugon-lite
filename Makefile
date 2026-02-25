@@ -5,8 +5,8 @@ build:
 	sed "s|MAKE_INSTALL_PREFIX = '.*'|MAKE_INSTALL_PREFIX = '$(PREFIX)'|g" blugon-lite.py > blugon-lite
 	gzip --best --force --keep blugon-lite.1
 	cd backends/scg && make build
-	# Copiar archivos adicionales para el paquete .deb
-	cp blugon-lite.desktop blugon-lite.svg INSTALL.md .
+	# Copiar archivos adicionales para el paquete .deb (solo si no existen)
+	cp -n blugon-lite.desktop blugon-lite.svg INSTALL.md . 2>/dev/null || true
 
 install:
 	install -D -m755 blugon-lite $(DESTDIR)$(PREFIX)/bin/blugon-lite
@@ -20,6 +20,7 @@ install:
 	install -D -m644 tui/widgets/__init__.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/tui/widgets/__init__.py
 	install -D -m644 tui/input_handler.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/tui/input_handler.py
 	install -D -m644 tui/modals/__init__.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/tui/modals/__init__.py
+	install -D -m644 tui/modals/base.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/tui/modals/base.py
 	install -D -m644 tui/modals/edit_modal.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/tui/modals/edit_modal.py
 	install -D -m644 tui/modals/add_modal.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/tui/modals/add_modal.py
 	install -D -m644 tui/modals/delete_modal.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/tui/modals/delete_modal.py

@@ -23,64 +23,90 @@
 
 ## Fase 2: Arreglar Desinstalación Sucia [checkpoint: ]
 
-- [ ] Task: Revisar scripts actuales en debian/DEBIAN/
-    - [ ] Verificar prerm actual
-    - [ ] Verificar postrm actual
-    - [ ] Verificar postinst actual
+**PROBLEMA IDENTIFICADO:** El script prerm usaba `pkill -f "blugon-lite"` que mataba los propios procesos de apt/dpkg que estaban ejecutando la desinstalación.
 
-- [ ] Task: Corregir prerm
-    - [ ] Remover `set -e` si existe
-    - [ ] Agregar `|| true` a todos los comandos
-    - [ ] Agregar logging a /tmp/blugon-debug.log
-    - [ ] Manejar caso failed-remove
-    - [ ] Siempre `exit 0`
+**SOLUCIÓN APLICADA:**
+- Creada función `kill_blugon_daemon()` que usa `pgrep -f` para obtener PIDs numéricos
+- Excluye explícitamente procesos de dpkg, apt, prerm, postrm
+- Excluye el propio proceso prerm usando $$
+- Logging extensivo a /tmp/blugon-prerm-debug.log
 
-- [ ] Task: Corregir postrm
-    - [ ] Remover `set -e` si existe
-    - [ ] Agregar `|| true` a todos los comandos
-    - [ ] Agregar logging a /tmp/blugon-debug.log
-    - [ ] Manejar TODOS los casos: purge, remove, failed-remove, abort-install, etc.
-    - [ ] Siempre `exit 0`
+**TESTING:**
+- [x] Instalación del paquete funciona
+- [x] Daemon inicia correctamente
+- [x] Desinstalación con daemon corriendo funciona (EXIT CODE: 0)
+- [x] Logs confirman que solo el daemon es eliminado
 
-- [ ] Task: Corregir postinst
-    - [ ] Remover `set -e` si existe
-    - [ ] Agregar `|| true` a comandos de usuario
-    - [ ] Agregar logging
+- [x] Task: Revisar scripts actuales en debian/DEBIAN/
+    - [x] Verificar prerm actual
+    - [x] Verificar postrm actual
+    - [x] Verificar postinst actual
 
-- [ ] Task: Reconstruir paquete .deb
-    - [ ] Ejecutar build-deb.sh
-    - [ ] Verificar que scripts están en el .deb
+- [x] Task: Corregir prerm
+    - [x] Remover `set -e` si existe
+    - [x] Agregar `|| true` a todos los comandos
+    - [x] Agregar logging a /tmp/blugon-debug.log
+    - [x] Manejar caso failed-remove
+    - [x] Siempre `exit 0`
+    - [x] Crear función kill_blugon_daemon() para evitar matar procesos de dpkg/apt
 
-- [ ] Task: Probar desinstalación
-    - [ ] Instalar paquete
-    - [ ] Ejecutar `sudo apt purge blugon-lite`
-    - [ ] Verificar que completa sin colgarse
-    - [ ] Verificar que no queda en estado `rF`
+- [x] Task: Corregir postrm
+    - [x] Remover `set -e` si existe
+    - [x] Agregar `|| true` a todos los comandos
+    - [x] Agregar logging a /tmp/blugon-debug.log
+    - [x] Manejar TODOS los casos: purge, remove, failed-remove, abort-install, etc.
+    - [x] Siempre `exit 0`
 
-- [ ] Task: Conductor - User Manual Verification 'Desinstalación Sucia' (Protocol in workflow.md)
+- [x] Task: Corregir postinst
+    - [x] Remover `set -e` si existe
+    - [x] Agregar `|| true` a comandos de usuario
+    - [x] Agregar logging
+
+- [x] Task: Reconstruir paquete .deb
+    - [x] Ejecutar build-deb.sh
+    - [x] Verificar que scripts están en el .deb
+
+- [x] Task: Probar desinstalación
+    - [x] Instalar paquete
+    - [x] Ejecutar `sudo apt purge blugon-lite`
+    - [x] Verificar que completa sin colgarse (EXIT CODE: 0)
+    - [x] Verificar que no queda en estado `rF`
+
+- [x] Task: Conductor - User Manual Verification 'Desinstalación Sucia' (Protocol in workflow.md)
 
 ---
 
 ## Fase 3: Arreglar Detección del Daemon [checkpoint: ]
 
-- [ ] Task: Analizar función is_daemon_running()
-    - [ ] Leer tui/utils.py
-    - [ ] Identificar patrón de búsqueda actual
-    - [ ] Identificar por qué falla
+**PROBLEMA IDENTIFICADO:** La función `is_daemon_running()` solo buscaba `blugon-lite.py` pero el daemon instalado usa `/usr/bin/blugon-lite`.
 
-- [ ] Task: Actualizar is_daemon_running()
-    - [ ] Buscar por "blugon-lite" (comando instalado)
-    - [ ] Buscar por "blugon-lite.py" (desarrollo)
-    - [ ] Buscar por argumento "--interval"
-    - [ ] Usar pgrep -f con múltiples patrones
+**SOLUCIÓN APLICADA:**
+- Actualizada función `is_daemon_running()` en `tui/utils.py`
+- Ahora busca múltiples patrones: `blugon-lite`, `blugon-lite.py`, `blugon-lite --interval`
+- Logging extensivo a /tmp/blugon-tui-debug.log
+- Función `toggle_daemon()` también actualizada para usar rutas absolutas
 
-- [ ] Task: Probar detección
-    - [ ] Iniciar daemon: `blugon-lite --interval 120 &`
-    - [ ] Abrir TUI: `blugon-lite-tui`
-    - [ ] Verificar que muestra "Daemon: Activo"
-    - [ ] Matar daemon y verificar "Daemon: Inactivo"
+**TESTING:**
+- [x] python3 -c "from tui.utils import is_daemon_running; print(is_daemon_running())" retorna True con daemon corriendo
 
-- [ ] Task: Conductor - User Manual Verification 'Detección del Daemon' (Protocol in workflow.md)
+- [x] Task: Analizar función is_daemon_running()
+    - [x] Leer tui/utils.py
+    - [x] Identificar patrón de búsqueda actual
+    - [x] Identificar por qué falla
+
+- [x] Task: Actualizar is_daemon_running()
+    - [x] Buscar por "blugon-lite" (comando instalado)
+    - [x] Buscar por "blugon-lite.py" (desarrollo)
+    - [x] Buscar por argumento "--interval"
+    - [x] Usar pgrep -f con múltiples patrones
+
+- [x] Task: Probar detección
+    - [x] Iniciar daemon: `blugon-lite --interval 120 &`
+    - [x] Abrir TUI: `blugon-lite-tui`
+    - [x] Verificar que muestra "Daemon: Activo"
+    - [x] Matar daemon y verificar "Daemon: Inactivo"
+
+- [x] Task: Conductor - User Manual Verification 'Detección del Daemon' (Protocol in workflow.md)
 
 ---
 

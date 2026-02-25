@@ -1,0 +1,497 @@
+================================================================================
+                    PROPUESTA DE TRACK: blugon-lite v1.0
+                    Paquete .deb Instalable con TUI
+================================================================================
+
+Fecha: 2026-02-23
+Proyecto: blugon-lite
+Track ID sugerido: blugon_deb_20260223
+
+================================================================================
+DESCRIPCIÓN DEL TRACK
+================================================================================
+
+Crear un paquete .deb instalable para blugon-lite que incluya:
+1. Script auto-configurable con fallback automático
+2. TUI (Text User Interface) con urwid para configuración interactiva
+3. Sistema de paquetes Debian con postinst para configuración automática
+4. Múltiples configuraciones predefinidas
+
+Objetivo final: El usuario puede instalar con `sudo dpkg -i blugon-lite.deb`
+y usar inmediatamente sin configuración manual.
+
+================================================================================
+CARACTERÍSTICAS A IMPLEMENTAR
+================================================================================
+
+1. AUTO-CONFIGURACIÓN (Prioridad: ALTA)
+────────────────────────────────────────
+El script buscará configuración en este orden:
+  1. ~/.config/blugon/gamma (config del usuario)
+  2. /usr/share/blugon-lite/configs/evening/gamma (sistema)
+  3. Fallback hardcodeado en el script
+
+Archivos a modificar:
+  - blugon-lite.py (función read_gamma)
+
+2. PAQUETE .DEB (Prioridad: ALTA)
+────────────────────────────────────────
+Estructura debian/ completa para construir paquete instalable
+
+Archivos a crear:
+  - debian/control (metadatos, dependencias)
+  - debian/postinst (script post-instalación)
+  - debian/prerm (script pre-remoción)
+  - debian/conffiles (archivos de configuración)
+  - debian/blugon-lite.docs (documentación)
+  - debian/blugon-lite.install (archivos a instalar)
+  - debian/blugon-lite.maintscript (migraciones)
+
+Dependencias:
+  - python3 (>= 3.6)
+  - python3-urwid (para el TUI)
+  - libx11-6, libxrandr2 (para backend scg)
+
+3. TUI CON URWID (Prioridad: ALTA)
+────────────────────────────────────────
+Interfaz de texto interactiva tipo htop para configurar blugon-lite
+
+Funcionalidades:
+  - Ver estado actual (gamma, próxima transición)
+  - Ver/editar horarios configurados
+  - Agregar nuevos horarios
+  - Eliminar horarios existentes
+  - Guardar configuración
+  - Iniciar/detener daemon
+  - Salir con confirmación si hay cambios sin guardar
+
+Archivos a crear:
+  - blugon-lite-tui (wrapper ejecutable)
+  - blugon-lite-tui.py (código fuente del TUI)
+
+4. CONFIGURACIONES PREDEFINIDAS (Prioridad: MEDIA)
+────────────────────────────────────────
+Múltiples perfiles de configuración para diferentes casos de uso
+
+Archivos a crear:
+  - configs/evening/gamma (mejorado, ya existe)
+  - configs/office/gamma (trabajador 9-5)
+  - configs/student/gamma (estudiante, horarios extendidos)
+  - configs/night-owl/gamma (nocturno)
+  - configs/minimal/gamma (solo 3 puntos)
+
+5. DOCUMENTACIÓN MEJORADA (Prioridad: ALTA)
+────────────────────────────────────────
+README actualizado con:
+  - Instrucciones de instalación del .deb
+  - Cómo usar el TUI
+  - Cómo editar configuraciones manualmente
+  - Ejemplos de diferentes casos de uso
+  - Solución de problemas
+
+Archivos a modificar:
+  - README.md
+  - blugon-lite.1 (man page)
+
+================================================================================
+ENTREGABLES
+================================================================================
+
+CÓDIGO:
+  [ ] blugon-lite.py (modificado con auto-config)
+  [ ] blugon-lite-tui (nuevo, wrapper bash)
+  [ ] blugon-lite-tui.py (nuevo, código Python + urwid)
+  [ ] configs/evening/gamma (mejorado con comentarios)
+  [ ] configs/office/gamma (nuevo)
+  [ ] configs/student/gamma (nuevo)
+  [ ] configs/night-owl/gamma (nuevo)
+  [ ] configs/minimal/gamma (nuevo)
+
+PAQUETE DEBIAN:
+  [ ] debian/control
+  [ ] debian/postinst
+  [ ] debian/prerm
+  [ ] debian/conffiles
+  [ ] debian/blugon-lite.docs
+  [ ] debian/blugon-lite.install
+  [ ] debian/blugon-lite.maintscript
+  [ ] debian/compat
+  [ ] debian/source/format
+
+DOCUMENTACIÓN:
+  [ ] README.md (actualizado)
+  [ ] blugon-lite.1 (actualizado)
+  [ ] INSTALL.md (nuevo, instrucciones de instalación)
+
+================================================================================
+PLAN DE IMPLEMENTACIÓN
+================================================================================
+
+FASE 1: Auto-Configuración del Script [checkpoint: ]
+────────────────────────────────────────────────────
+Duración estimada: 2-3 horas
+
+- [ ] Task: Modificar blugon-lite.py con fallback automático
+    - [ ] Actualizar función read_gamma() para buscar en múltiples ubicaciones
+    - [ ] Agregar configuración hardcodeada por defecto
+    - [ ] Mantener compatibilidad con configs existentes
+    - [ ] Testear que funciona sin ~/.config/blugon/gamma
+
+- [ ] Task: Mejorar archivo configs/evening/gamma
+    - [ ] Agregar comentarios detallados sobre formato
+    - [ ] Incluir guía de temperaturas (6500K, 4500K, 3000K, 2000K)
+    - [ ] Ejemplos de cómo agregar/quitar horarios
+    - [ ] Mantener horario 17:00-08:00 como default
+
+- [ ] Task: Conductor - User Manual Verification 'Auto-Configuración'
+
+---
+
+FASE 2: TUI con urwid [checkpoint: ]
+────────────────────────────────────────────────────
+Duración estimada: 6-8 horas
+
+- [ ] Task: Configurar entorno de desarrollo para TUI
+    - [ ] Instalar urwid (pip install urwid)
+    - [ ] Crear archivo blugon-lite-tui.py básico
+    - [ ] Implementar ventana principal con título
+    - [ ] Implementar loop principal de urwid
+
+- [ ] Task: Implementar visualización de horarios
+    - [ ] Leer configuración actual desde ~/.config/blugon/gamma
+    - [ ] Mostrar lista de horarios con navegación (↑↓)
+    - [ ] Mostrar gamma actual y próxima transición
+    - [ ] Resaltar horario seleccionado
+
+- [ ] Task: Implementar edición de horarios
+    - [ ] Dialog para editar hora (HH:MM)
+    - [ ] Dialog para editar temperatura (Kelvin)
+    - [ ] Validación de inputs (hora 0-23, temp 1000-20000)
+    - [ ] Vista previa de cambios antes de guardar
+
+- [ ] Task: Implementar agregar/eliminar horarios
+    - [ ] Dialog para agregar nuevo horario
+    - [ ] Confirmación antes de eliminar
+    - [ ] Ordenamiento automático por hora
+    - [ ] Prevención de duplicados
+
+- [ ] Task: Implementar guardado y salida
+    - [ ] Guardar cambios a ~/.config/blugon/gamma
+    - [ ] Confirmación si hay cambios sin guardar
+    - [ ] Mensaje de éxito después de guardar
+    - [ ] Atajos: 's' guardar, 'q' salir, 'h' ayuda
+
+- [ ] Task: Implementar características adicionales
+    - [ ] Mostrar estado del daemon (corriendo/detenido)
+    - [ ] Botón para iniciar/detener daemon
+    - [ ] About screen (tecla 'a')
+    - [ ] Help screen (tecla 'h')
+    - [ ] Colores y estilos apropiados
+
+- [ ] Task: Crear wrapper ejecutable blugon-lite-tui
+    - [ ] Script bash que llama a Python
+    - [ ] Verificar dependencias (python3, urwid)
+    - [ ] Manejo de errores si faltan dependencias
+    - [ ] Hacer ejecutable (chmod +x)
+
+- [ ] Task: Conductor - User Manual Verification 'TUI con urwid'
+
+---
+
+FASE 3: Configuraciones Predefinidas [checkpoint: ]
+────────────────────────────────────────────────────
+Duración estimada: 2-3 horas
+
+- [ ] Task: Crear config office/gamma
+    - [ ] Horario típico oficina (9:00-18:00)
+    - [ ] 5-6 puntos de transición
+    - [ ] Comentarios específicos para este perfil
+
+- [ ] Task: Crear config student/gamma
+    - [ ] Horarios extendidos (estudiante)
+    - [ ] Más horas de luz normal
+    - [ ] Transición más tarde en la noche
+
+- [ ] Task: Crear config night-owl/gamma
+    - [ ] Para usuarios nocturnos
+    - [ ] Luz normal hasta tarde
+    - [ ] Transición más tarde
+
+- [ ] Task: Crear config minimal/gamma
+    - [ ] Solo 3 puntos: día, tarde, noche
+    - [ ] Simple y fácil de entender
+    - [ ] Ideal para usuarios nuevos
+
+- [ ] Task: Actualizar Makefile
+    - [ ] Incluir nuevas configs en install
+    - [ ] Actualizar rutas de instalación
+
+- [ ] Task: Conductor - User Manual Verification 'Configuraciones Predefinidas'
+
+---
+
+FASE 4: Testing Manual del Conjunto [checkpoint: ]
+────────────────────────────────────────────────────
+Duración estimada: 2-3 horas
+
+- [ ] Task: Testing de blugon-lite.py auto-configurable
+    - [ ] Probar sin ~/.config/blugon/gamma
+    - [ ] Probar con config de usuario
+    - [ ] Probar fallback a config del sistema
+    - [ ] Probar fallback hardcodeado
+    - [ ] Verificar --once funciona
+    - [ ] Verificar --interval funciona
+    - [ ] Verificar --backend funciona
+
+- [ ] Task: Testing de blugon-lite-tui
+    - [ ] Probar navegación con teclado
+    - [ ] Probar edición de horarios
+    - [ ] Probar agregar/eliminar horarios
+    - [ ] Probar guardado de configuración
+    - [ ] Probar en diferentes tamaños de terminal
+    - [ ] Verificar que no crasha
+
+- [ ] Task: Testing de integración
+    - [ ] blugon-lite.py y blugon-lite-tui coexisten
+    - [ ] Cambios en TUI se reflejan en blugon-lite
+    - [ ] Múltiples configs predefinidas cargan bien
+    - [ ] Probar flujo completo: instalar → TUI → usar
+
+- [ ] Task: Corregir bugs encontrados
+    - [ ] Listar bugs encontrados
+    - [ ] Priorizar por severidad
+    - [ ] Corregir bugs críticos
+    - [ ] Corregir bugs menores si hay tiempo
+
+- [ ] Task: Conductor - User Manual Verification 'Testing Manual del Conjunto'
+
+---
+
+FASE 5: Documentación [checkpoint: ]
+────────────────────────────────────────────────────
+Duración estimada: 2-3 horas
+
+- [ ] Task: Actualizar README.md
+    - [ ] Instrucciones de uso (antes del .deb)
+    - [ ] Sección sobre el TUI (cómo usar)
+    - [ ] Guía de configuraciones predefinidas
+    - [ ] Cómo editar gamma manualmente
+    - [ ] Ejemplos para diferentes casos de uso
+    - [ ] Solución de problemas comunes
+    - [ ] Capturas de pantalla del TUI (ASCII)
+
+- [ ] Task: Crear INSTALL.md
+    - [ ] Requisitos del sistema
+    - [ ] Instalación desde fuente (paso a paso)
+    - [ ] Uso básico después de instalar
+    - [ ] Primeros pasos con el TUI
+
+- [ ] Task: Actualizar blugon-lite.1 (man page)
+    - [ ] Documentar opción --status (si se agrega)
+    - [ ] Documentar blugon-lite-tui
+    - [ ] Ejemplos de uso del TUI
+    - [ ] Referencia a configuraciones predefinidas
+
+- [ ] Task: Conductor - User Manual Verification 'Documentación'
+
+---
+
+FASE 6: Paquete .deb [checkpoint: ]
+────────────────────────────────────────────────────
+Duración estimada: 3-4 horas
+(¡SOLO DESPUÉS DE QUE TODO FUNCIONE!)
+
+- [ ] Task: Crear estructura debian/
+    - [ ] Crear directorio debian/
+    - [ ] Crear debian/control con metadatos
+    - [ ] Crear debian/compat
+    - [ ] Crear debian/source/format
+
+- [ ] Task: Crear archivos de instalación
+    - [ ] Crear debian/blugon-lite.install
+    - [ ] Crear debian/blugon-lite.docs
+    - [ ] Crear debian/conffiles
+    - [ ] Crear debian/blugon-lite.maintscript
+
+- [ ] Task: Crear scripts de mantenimiento
+    - [ ] Crear debian/postinst (post-instalación)
+    - [ ] Crear debian/prerm (pre-remoción)
+    - [ ] Crear debian/postrm (post-remoción)
+    - [ ] Hacer scripts ejecutables
+
+- [ ] Task: Implementar postinst
+    - [ ] Crear ~/.config/blugon/ si no existe
+    - [ ] Copiar config por defecto si no existe config de usuario
+    - [ ] Ofrecer activar servicio systemd (opcional)
+    - [ ] Manejar actualización desde versión previa
+
+- [ ] Task: Implementar prerm/postrm
+    - [ ] Detener daemon si está corriendo
+    - [ ] Opción de mantener configs del usuario
+    - [ ] Limpieza de archivos temporales
+
+- [ ] Task: Construir paquete .deb
+    - [ ] Ejecutar dpkg-deb --build debian/
+    - [ ] Verificar paquete con dpkg-deb --info
+    - [ ] Listar contenido con dpkg-deb --content
+    - [ ] Mover .deb a raíz del proyecto
+
+- [ ] Task: Testing del paquete .deb
+    - [ ] Instalar en sistema limpio (VM o container)
+    - [ ] Verificar postinst se ejecuta
+    - [ ] Verificar configs se instalan
+    - [ ] Verificar TUI funciona
+    - [ ] Verificar blugon-lite funciona
+    - [ ] Probar desinstalación
+
+- [ ] Task: Conductor - User Manual Verification 'Paquete .deb'
+
+---
+
+FASE 7: Finalización [checkpoint: ]
+────────────────────────────────────────────────────
+Duración estimada: 1-2 horas
+
+- [ ] Task: Verificar criterios de aceptación
+    - [ ] blugon-lite.py funciona sin config manual
+    - [ ] blugon-lite-tui es intuitivo y funcional
+    - [ ] Múltiples configs predefinidas disponibles
+    - [ ] Documentación clara y completa
+    - [ ] .deb se instala sin errores
+
+- [ ] Task: Limpieza final
+    - [ ] Eliminar archivos temporales
+    - [ ] Verificar PEP 8 en código Python
+    - [ ] Verificar que no hay código comentado
+    - [ ] Optimizar si es necesario
+
+- [ ] Task: Conductor - User Manual Verification 'Finalización'
+
+---
+
+================================================================================
+CRITERIOS DE ACEPTACIÓN
+================================================================================
+
+INSTALACIÓN:
+  [ ] sudo dpkg -i blugon-lite.deb funciona sin errores
+  [ ] Dependencias se instalan automáticamente
+  [ ] postinst crea configuración por defecto
+  [ ] Usuario puede usar inmediatamente después de instalar
+
+AUTO-CONFIGURACIÓN:
+  [ ] Funciona sin ~/.config/blugon/gamma
+  [ ] Fallback a /usr/share/blugon-lite/configs/ funciona
+  [ ] Fallback hardcodeado funciona
+  [ ] Mensajes de error claros si falla
+
+TUI:
+  [ ] Navegación con flechas funciona
+  [ ] Edición de horarios es intuitiva
+  [ ] Agregar/eliminar horarios funciona
+  [ ] Guardado persiste cambios
+  [ ] Confirmación de salida sin guardar
+  [ ] Help screen es útil
+  [ ] Funciona en terminales de 80x24 mínimo
+
+CONFIGURACIONES:
+  [ ] evening/gamma bien comentado
+  [ ] office/gamma útil para trabajadores
+  [ ] student/gamma útil para estudiantes
+  [ ] night-owl/gamma útil para nocturnos
+  [ ] minimal/gamma simple para nuevos usuarios
+
+DOCUMENTACIÓN:
+  [ ] README explica instalación del .deb
+  [ ] README explica cómo usar el TUI
+  [ ] README explica cómo editar configs manualmente
+  [ ] Ejemplos claros para diferentes casos
+  [ ] Man page actualizada
+
+PAQUETE:
+  [ ] .deb se construye sin errores
+  [ ] Metadatos correctos (versión, descripción)
+  [ ] Dependencias correctas
+  [ ] Scripts de mantenimiento funcionan
+  [ ] Archivos se instalan en ubicaciones correctas
+
+================================================================================
+DEPENDENCIAS TÉCNICAS
+================================================================================
+
+PARA DESARROLLO:
+  - Python 3.6+
+  - urwid (pip install urwid)
+  - dpkg-deb (para construir .deb)
+  - Debian/Ubuntu (para testing)
+
+PARA USUARIO FINAL:
+  - python3 (>= 3.6)
+  - python3-urwid
+  - libx11-6
+  - libxrandr2
+  - xorg-xgamma (opcional, para backend xgamma)
+
+================================================================================
+ARCHIVOS A MODIFICAR/CREAR - RESUMEN
+================================================================================
+
+MODIFICAR:
+  - blugon-lite.py (auto-config fallback)
+  - configs/evening/gamma (mejorar comentarios)
+  - README.md (actualizar con .deb y TUI)
+  - blugon-lite.1 (actualizar)
+  - Makefile (incluir nuevas configs)
+
+CREAR:
+  - blugon-lite-tui (wrapper bash)
+  - blugon-lite-tui.py (TUI Python + urwid)
+  - configs/office/gamma
+  - configs/student/gamma
+  - configs/night-owl/gamma
+  - configs/minimal/gamma
+  - debian/control
+  - debian/postinst
+  - debian/prerm
+  - debian/postrm
+  - debian/conffiles
+  - debian/blugon-lite.docs
+  - debian/blugon-lite.install
+  - debian/blugon-lite.maintscript
+  - debian/compat
+  - debian/source/format
+  - INSTALL.md
+
+================================================================================
+NOTAS ADICIONALES
+================================================================================
+
+SOBRE URWID:
+  - No incluir en requirements.txt (es dependencia del sistema)
+  - El .deb lo maneja via Depends: python3-urwid
+  - Usuario no necesita instalar manualmente
+
+SOBRE POSTINST:
+  - Debe ser idempotente (puede ejecutarse múltiples veces)
+  - No debe sobrescribir config del usuario si ya existe
+  - Debe manejar actualizaciones desde versiones previas
+
+SOBRE EL TUI:
+  - Mantener simple pero funcional
+  - No sobrecargar con características innecesarias
+  - Priorizar usabilidad sobre features
+
+SOBRE COMPATIBILIDAD:
+  - Mantener compatibilidad con configs de blugon original
+  - No romper API de línea de comandos existente
+  - blugon-lite.py debe seguir funcionando sin el TUI
+
+================================================================================
+                    FIN DE LA PROPUESTA DE TRACK
+================================================================================
+
+Voy a probar una estrategia diferente: usar un contenedor que envuelva todo el modal y capture las teclas antes que nada.
+
+  ✦ Tenés razón, el problema es que el ModalOverlay no está capturando las teclas correctamente. Voy a simplificar la estrategia: hacer que 
+    el modal capture ESC directamente y los botones funcionen con Enter:
+

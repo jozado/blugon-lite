@@ -1,0 +1,77 @@
+#!/bin/bash
+# postrm - NO USAR set -e para permitir desinstalación incluso con errores
+
+LOGFILE="/tmp/blugon-postrm-debug.log"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] postrm iniciado con argumento: $1" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] PID: $$, USER: $(whoami)" >> "$LOGFILE"
+
+case "$1" in
+    purge)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: purge" >> "$LOGFILE"
+        # Actualizar caché de iconos (sin fallar)
+        if [ -x /usr/bin/update-icon-caches ]; then
+            update-icon-caches /usr/share/icons/hicolor >> "$LOGFILE" 2>&1 || echo "update-icon-caches falló" >> "$LOGFILE"
+        fi
+
+        # Actualizar caché de desktop (sin fallar)
+        if [ -x /usr/bin/update-desktop-database ]; then
+            update-desktop-database /usr/share/applications >> "$LOGFILE" 2>&1 || echo "update-desktop-database falló" >> "$LOGFILE"
+        fi
+
+        # Limpiar configs de usuario SOLO si se usa --purge con fuerza
+        # No tocar ~/.config del usuario por defecto
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] purge completado" >> "$LOGFILE"
+        ;;
+
+    remove)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: remove" >> "$LOGFILE"
+        # En remove normal, no hacer nada adicional
+        ;;
+
+    deconfigure)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: deconfigure" >> "$LOGFILE"
+        # En deconfigure, no hacer nada
+        ;;
+
+    abort-install)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: abort-install" >> "$LOGFILE"
+        # Instalación abortada, limpiar
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: abort-*" >> "$LOGFILE"
+        # Abortos, no hacer nada
+        ;;
+
+    failed-install)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: failed-install" >> "$LOGFILE"
+        # Instalación fallida, limpiar
+        ;;
+
+    upgrade)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: upgrade" >> "$LOGFILE"
+        # Después de upgrade, no hacer nada
+        ;;
+
+    disappear)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: disappear" >> "$LOGFILE"
+        # Paquete desapareciendo, no hacer nada
+        ;;
+
+    failed-remove)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: failed-remove (CRÍTICO)" >> "$LOGFILE"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Verificando estado de archivos:" >> "$LOGFILE"
+        ls -la /usr/bin/blugon-lite >> "$LOGFILE" 2>&1 || echo "/usr/bin/blugon-lite no existe" >> "$LOGFILE"
+        ls -la /usr/bin/blugon-lite-tui >> "$LOGFILE" 2>&1 || echo "/usr/bin/blugon-lite-tui no existe" >> "$LOGFILE"
+        ;;
+
+    *)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Argumento desconocido: $1" >> "$LOGFILE"
+        echo "Usage: postrm purge|remove|deconfigure|abort-install|abort-upgrade|abort-remove|abort-deconfigure|failed-install|upgrade|disappear" >&2
+        exit 1
+        ;;
+esac
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] postrm finalizando con exit 0" >> "$LOGFILE"
+# Siempre salir con éxito para no bloquear desinstalación
+exit 0

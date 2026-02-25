@@ -1,0 +1,146 @@
+#!/bin/bash
+# prerm - NO USAR set -e para permitir desinstalación incluso con errores
+
+LOGFILE="/tmp/blugon-prerm-debug.log"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] prerm iniciado con argumento: $1" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] PID: $$, USER: $(whoami)" >> "$LOGFILE"
+
+# Función para matar solo el daemon, no procesos de dpkg/apt
+kill_blugon_daemon() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Buscando daemon blugon-lite (excluyendo dpkg/apt/prerm/postrm)..." >> "$LOGFILE"
+
+    # Obtener PIDs que coinciden con blugon-lite pero excluir procesos de empaquetado
+    local pids_to_kill=""
+    
+    # Usar pgrep para obtener PIDs numéricos directamente
+    while IFS= read -r pid; do
+        # Obtener línea completa del proceso
+        ps_line=$(ps -p "$pid" -o pid,comm,args --no-headers 2>/dev/null)
+        if [ -z "$ps_line" ]; then
+            continue
+        fi
+        
+        cmd=$(echo "$ps_line" | awk '{for(i=3;i<=NF;i++) printf $i" "; print ""}')
+        
+        # Excluir procesos de dpkg, apt, prerm, postrm
+        if echo "$cmd" | grep -qE '(dpkg|apt|prerm|postrm)'; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Excluyendo PID $pid (proceso de empaquetado): $cmd" >> "$LOGFILE"
+            continue
+        fi
+        
+        # Excluir el propio script prerm
+        if [ "$pid" = "$$" ]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Excluyendo PID $$ (este proceso prerm)" >> "$LOGFILE"
+            continue
+        fi
+        
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Marcando para kill PID $pid: $cmd" >> "$LOGFILE"
+        pids_to_kill="$pids_to_kill $pid"
+    done < <(pgrep -f 'blugon-lite' 2>/dev/null)
+
+    if [ -n "$pids_to_kill" ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando kill -9$pids_to_kill" >> "$LOGFILE"
+        kill -9 $pids_to_kill >> "$LOGFILE" 2>&1 && echo "[$(date '+%Y-%m-%d %H:%M:%S')] kill exit: $?" >> "$LOGFILE" || echo "[$(date '+%Y-%m-%d %H:%M:%S')] kill falló: $?" >> "$LOGFILE"
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] No hay procesos de daemon para matar" >> "$LOGFILE"
+    fi
+}
+
+case "$1" in
+    remove)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: remove" >> "$LOGFILE"
+        
+        # Listar procesos antes de matar
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Procesos blugon-lite antes de stop:" >> "$LOGFILE"
+        ps aux | grep -E 'blugon-lite' | grep -v grep >> "$LOGFILE" 2>&1 || echo "No hay procesos" >> "$LOGFILE"
+        
+        # Detener servicio systemd si existe (sin fallar)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando detener systemd..." >> "$LOGFILE"
+        if command -v systemctl > /dev/null 2>&1; then
+            systemctl stop blugon-lite >> "$LOGFILE" 2>&1 || echo "systemctl stop falló o servicio no existe" >> "$LOGFILE"
+            systemctl disable blugon-lite >> "$LOGFILE" 2>&1 || echo "systemctl disable falló" >> "$LOGFILE"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] systemctl completado" >> "$LOGFILE"
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] systemctl no disponible" >> "$LOGFILE"
+        fi
+
+        # Detener init script SysV (sin fallar)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando detener init.d..." >> "$LOGFILE"
+        if [ -x /etc/init.d/blugon-lite ]; then
+            /etc/init.d/blugon-lite stop >> "$LOGFILE" 2>&1 || echo "init.d stop falló" >> "$LOGFILE"
+            if [ -x /usr/sbin/update-rc.d ]; then
+                update-rc.d -f blugon-lite remove >> "$LOGFILE" 2>&1 || echo "update-rc.d falló" >> "$LOGFILE"
+            fi
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] init.d no disponible" >> "$LOGFILE"
+        fi
+
+        # Matar cualquier proceso de blugon-lite corriendo (sin fallar)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando kill_blugon_daemon..." >> "$LOGFILE"
+        kill_blugon_daemon
+        
+        # Listar procesos después de matar
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Procesos blugon-lite después de pkill:" >> "$LOGFILE"
+        ps aux | grep -E 'blugon-lite' | grep -v grep >> "$LOGFILE" 2>&1 || echo "No hay procesos" >> "$LOGFILE"
+        ;;
+    
+    deconfigure)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: deconfigure" >> "$LOGFILE"
+        # Similar a remove pero más suave
+        if command -v systemctl > /dev/null 2>&1; then
+            systemctl stop blugon-lite >> "$LOGFILE" 2>&1 || echo "systemctl stop falló" >> "$LOGFILE"
+        fi
+
+        if [ -x /etc/init.d/blugon-lite ]; then
+            /etc/init.d/blugon-lite stop >> "$LOGFILE" 2>&1 || echo "init.d stop falló" >> "$LOGFILE"
+        fi
+
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando kill_blugon_daemon..." >> "$LOGFILE"
+        kill_blugon_daemon
+        ;;
+
+    purge)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: purge" >> "$LOGFILE"
+        # Matar procesos (sin fallar)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando kill_blugon_daemon..." >> "$LOGFILE"
+        kill_blugon_daemon
+        ;;
+
+    upgrade)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: upgrade" >> "$LOGFILE"
+        # En upgrade, intentar reiniciar el servicio (sin fallar)
+        if command -v systemctl > /dev/null 2>&1; then
+            systemctl restart blugon-lite >> "$LOGFILE" 2>&1 || echo "systemctl restart falló" >> "$LOGFILE"
+        elif [ -x /etc/init.d/blugon-lite ]; then
+            /etc/init.d/blugon-lite restart >> "$LOGFILE" 2>&1 || echo "init.d restart falló" >> "$LOGFILE"
+        fi
+        ;;
+
+    failed-remove)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: failed-remove (CRÍTICO)" >> "$LOGFILE"
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Estado actual de dpkg:" >> "$LOGFILE"
+        dpkg -l blugon-lite >> "$LOGFILE" 2>&1 || echo "dpkg -l falló" >> "$LOGFILE"
+
+        # Matar procesos agresivamente pero con seguridad
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando kill_blugon_daemon agresivo..." >> "$LOGFILE"
+        kill_blugon_daemon
+
+        # Verificar si hay procesos zombie
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Verificando procesos zombie:" >> "$LOGFILE"
+        ps aux | grep -E 'blugon-lite|defunct' | grep -v grep >> "$LOGFILE" 2>&1 || echo "No hay zombie" >> "$LOGFILE"
+
+        # Intentar limpiar estado de dpkg
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando dpkg --configure -a..." >> "$LOGFILE"
+        dpkg --configure -a >> "$LOGFILE" 2>&1 && echo "dpkg --configure exit: $?" >> "$LOGFILE" || echo "dpkg --configure falló, exit: $?" >> "$LOGFILE"
+        ;;
+
+    *)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Argumento desconocido: $1" >> "$LOGFILE"
+        echo "Usage: prerm remove|deconfigure|purge|upgrade|failed-remove" >&2
+        exit 1
+        ;;
+esac
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] prerm finalizando con exit 0" >> "$LOGFILE"
+# Siempre salir con éxito para no bloquear desinstalación
+exit 0

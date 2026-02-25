@@ -159,21 +159,64 @@ def load_theme():
 
 
 def is_daemon_running():
-    """Verificar si el daemon de blugon-lite está en ejecución."""
-    try:
-        result = subprocess.run(['pgrep', '-f', 'blugon-lite.py'],
-                              capture_output=True, text=True)
-        return result.returncode == 0 and result.stdout.strip() != ''
-    except:
-        return False
+    """Verificar si el daemon de blugon-lite está en ejecución.
+    
+    Busca múltiples patrones para detectar el daemon:
+    - blugon-lite (comando instalado en /usr/bin)
+    - blugon-lite.py (script de desarrollo)
+    - --interval (argumento característico del daemon)
+    """
+    import logging
+    logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
+    
+    patrones = [
+        'blugon-lite',      # Comando instalado
+        'blugon-lite.py',   # Script de desarrollo
+        'blugon-lite --interval',  # Daemon con intervalo
+    ]
+    
+    for patron in patrones:
+        try:
+            result = subprocess.run(
+                ['pgrep', '-f', patron],
+                capture_output=True,
+                text=True
+            )
+            logging.debug(f"pgrep -f '{patron}': returncode={result.returncode}, stdout='{result.stdout.strip()}'")
+            if result.returncode == 0 and result.stdout.strip():
+                logging.info(f"Daemon detectado con patrón: '{patron}'")
+                return True
+        except Exception as e:
+            logging.error(f"Error al buscar patrón '{patron}': {e}")
+    
+    logging.info("No se detectó el daemon con ningún patrón")
+    return False
 
 
 def toggle_daemon():
     """Alternar estado del daemon de blugon-lite."""
+    import logging
+    
     if is_daemon_running():
-        subprocess.run(['pkill', '-f', 'blugon-lite.py'])
+        logging.info("Deteniendo daemon...")
+        result = subprocess.run(['pkill', '-f', 'blugon-lite'], capture_output=True, text=True)
+        logging.debug(f"pkill resultado: returncode={result.returncode}")
         return False
     else:
-        subprocess.Popen(['nohup', 'blugon-lite', '-i', '120'],
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        logging.info("Iniciando daemon...")
+        # Usar ruta absoluta para el daemon
+        daemon_cmd = ['/usr/bin/blugon-lite', '--interval', '120']
+        # Verificar si existe /usr/bin/blugon-lite, si no usar blugon-lite.py
+        import os
+        if not os.path.exists('/usr/bin/blugon-lite'):
+            # En desarrollo, usar el script local
+            daemon_cmd = ['python3', 'blugon-lite.py', '--interval', '120']
+        
+        logging.debug(f"Ejecutando: {' '.join(daemon_cmd)}")
+        subprocess.Popen(
+            daemon_cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
         return True

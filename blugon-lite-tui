@@ -1,5 +1,5 @@
 #!/bin/bash
-# blugon-lite-tui - Wrapper script for blugon-lite TUI
+# blugon-lite-tui - Wrapper script for blugon-lite TUI with fixed terminal size 60x25
 
 # Check if Python 3 is available
 if ! command -v python3 &> /dev/null; then
@@ -12,6 +12,36 @@ if ! python3 -c "import urwid" 2>/dev/null; then
     echo "Error: python3-urwid is required but not installed."
     echo "Install it with: sudo apt install python3-urwid"
     exit 1
+fi
+
+# Guardar tamaño original de terminal
+ORIG_COLS=${COLUMNS:-$(tput cols 2>/dev/null)}
+ORIG_LINES=${LINES:-$(tput lines 2>/dev/null)}
+
+# Tamaño fijo para el TUI (como htop)
+DESIRED_COLS=60
+DESIRED_LINES=25
+
+# Función para restaurar tamaño original al salir
+restore_size() {
+    if [ -n "$ORIG_COLS" ] && [ -n "$ORIG_LINES" ] && [ -t 1 ]; then
+        printf '\e[8;'"$ORIG_LINES"';'"$ORIG_COLS"'t' 2>/dev/null
+    fi
+}
+
+# Configurar trap para restaurar al salir
+trap 'restore_size' EXIT INT TERM
+
+# Intentar cambiar tamaño de terminal (solo si es una terminal real)
+if [ -t 1 ]; then
+    # Método 1: Usando secuencia ANSI escape (funciona en la mayoría de terminales)
+    printf '\e[8;'"$DESIRED_LINES"';'"$DESIRED_COLS"'t' 2>/dev/null
+    sleep 0.1
+    
+    # Método 2: Usando resize si está disponible (para xterm)
+    if command -v resize &> /dev/null; then
+        eval $(resize -s $DESIRED_LINES $DESIRED_COLS 2>/dev/null)
+    fi
 fi
 
 # Get the directory where this script is located
