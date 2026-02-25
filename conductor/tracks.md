@@ -14,7 +14,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## Bug Fixes
 
-- [ ] **Track: Reparar bugs de input del modal de edición del TUI**
+- [x] **Track: Reparar bugs de input del modal de edición del TUI**
   *Link: [./tracks/tui_modal_input_fix_20260224/](./tracks/tui_modal_input_fix_20260224/)*
   *Parent: blugon_deb_20260223*
   *Priority: HIGH - Bloquea testing del TUI*

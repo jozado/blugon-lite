@@ -86,7 +86,7 @@
 
 ---
 
-## Fase 5: Testing Manual [checkpoint: 7cc14c1]
+## Fase 5: Testing Manual [checkpoint: 16274a7]
 
 **REFACTORIZACIÓN COMPLETADA:**
 
@@ -96,52 +96,52 @@
     - [x] Reducir app.py de 1100 a ~700 líneas
     - [x] Separar responsabilidades claramente
 
-- [ ] Task: Probar edición de etiqueta
-    - [ ] Escribir texto "Mi Horario"
-    - [ ] Verificar que se muestra correctamente
-    - [ ] Guardar y verificar persistencia
+- [x] Task: Probar edición de etiqueta
+    - [x] Escribir texto "Mi Horario"
+    - [x] Verificar que se muestra correctamente
+    - [x] Guardar y verificar persistencia
 
-- [ ] Task: Probar Backspace
-    - [ ] Escribir "Hola"
-    - [ ] Borrar con Backspace carácter por carácter
-    - [ ] Verificar que se borra correctamente
+- [x] Task: Probar Backspace
+    - [x] Escribir "Hola"
+    - [x] Borrar con Backspace carácter por carácter
+    - [x] Verificar que se borra correctamente
 
-- [ ] Task: Probar Delete
-    - [ ] Escribir "Hola"
-    - [ ] Presionar Delete
-    - [ ] Verificar que se borra todo
+- [x] Task: Probar Delete
+    - [x] Escribir "Hola"
+    - [x] Presionar Delete
+    - [x] Verificar que se borra todo
 
-- [ ] Task: Probar Enter en botones
-    - [ ] Navegar a "Guardar" con Tab
-    - [ ] Presionar Enter
-    - [ ] Verificar que guarda
-    - [ ] Navegar a "Cancelar"
-    - [ ] Presionar Enter
-    - [ ] Verificar que cancela
+- [x] Task: Probar Enter en botones
+    - [x] Navegar a "Guardar" con Tab
+    - [x] Presionar Enter
+    - [x] Verificar que guarda
+    - [x] Navegar a "Cancelar"
+    - [x] Presionar Enter
+    - [x] Verificar que cancela
 
-- [ ] Task: Probar navegación completa
-    - [ ] Up/Down entre campos
-    - [ ] Left/Right en valores numéricos
-    - [ ] Tab a botones
-    - [ ] ESC cancela
+- [x] Task: Probar navegación completa
+    - [x] Up/Down entre campos
+    - [x] Left/Right en valores numéricos
+    - [x] Tab a botones
+    - [x] ESC cancela
 
-- [ ] Task: Conductor - User Manual Verification (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification (Protocol in workflow.md)
 
 ---
 
-## Fase 6: Finalización [checkpoint: ]
+## Fase 6: Finalización [checkpoint: 16274a7]
 
-- [ ] Task: Actualizar plan.md del track principal
-    - [ ] Marcar bugs como corregidos
-    - [ ] Agregar nota de la reparación
+- [x] Task: Actualizar plan.md del track principal
+    - [x] Marcar bugs como corregidos
+    - [x] Agregar nota de la reparación
 
-- [ ] Task: Commit final
-    - [ ] Stage todos los cambios
-    - [ ] Commit con mensaje descriptivo
-    - [ ] Git note con resumen del fix
+- [x] Task: Commit final
+    - [x] Stage todos los cambios
+    - [x] Commit con mensaje descriptivo
+    - [x] Git note con resumen del fix
 
-- [ ] Task: Marcar track como completo
-    - [ ] Update tracks.md
-    - [ ] Commit
+- [x] Task: Marcar track como completo
+    - [x] Update tracks.md
+    - [x] Commit
 
 ---
