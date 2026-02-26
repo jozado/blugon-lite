@@ -34,7 +34,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## Bug Fixes Pending
 
-- [ ] **Track: Solucionar issues pendientes del deb**
+- [~] **Track: Solucionar issues pendientes del deb**
   *Link: [./tracks/deb_issues_20260226/](./tracks/deb_issues_20260226/)*
   *Parent: deb_funcional_20260225*
   *Priority: HIGH - Mejoras críticas post-instalación*

@@ -4,25 +4,67 @@
 LOGFILE="/tmp/blugon-postrm-debug.log"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] postrm iniciado con argumento: $1" >> "$LOGFILE"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] PID: $$, USER: $(whoami)" >> "$LOGFILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] DISPLAY=${DISPLAY:-'no definido'}" >> "$LOGFILE"
+
+# Función para restaurar gamma con fallback
+restaurar_gamma() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando restaurar gamma..." >> "$LOGFILE"
+    
+    # Establecer DISPLAY si no está definido
+    export DISPLAY="${DISPLAY:-:0}"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] DISPLAY=$DISPLAY" >> "$LOGFILE"
+    
+    # Método 1: blugon-lite --once
+    if [ -x /usr/bin/blugon-lite ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando blugon-lite --once..." >> "$LOGFILE"
+        if /usr/bin/blugon-lite --once >> "$LOGFILE" 2>&1; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ blugon-lite --once exitoso" >> "$LOGFILE"
+            return 0
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ blugon-lite --once falló" >> "$LOGFILE"
+        fi
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] /usr/bin/blugon-lite no existe" >> "$LOGFILE"
+    fi
+    
+    # Método 2: xgamma -gamma 1.0
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando xgamma -gamma 1.0..." >> "$LOGFILE"
+    if command -v xgamma > /dev/null 2>&1; then
+        if xgamma -gamma 1.0 >> "$LOGFILE" 2>&1; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xgamma -gamma 1.0 exitoso" >> "$LOGFILE"
+            return 0
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ xgamma -gamma 1.0 falló" >> "$LOGFILE"
+        fi
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] xgamma no encontrado" >> "$LOGFILE"
+    fi
+    
+    # Método 3: xgamma con RGB
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0..." >> "$LOGFILE"
+    if xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 >> "$LOGFILE" 2>&1; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xgamma RGB exitoso" >> "$LOGFILE"
+        return 0
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ xgamma RGB falló" >> "$LOGFILE"
+    fi
+    
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ TODOS los métodos fallaron" >> "$LOGFILE"
+    return 1
+}
 
 case "$1" in
     purge)
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: purge" >> "$LOGFILE"
-        
-        # Restaurar gamma normal antes de desinstalar
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Restaurando gamma normal (6500K)..." >> "$LOGFILE"
-        if [ -x /usr/bin/blugon-lite ]; then
-            /usr/bin/blugon-lite --once >> "$LOGFILE" 2>&1
-            RESTORE_EXIT=$?
-            if [ $RESTORE_EXIT -eq 0 ]; then
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Gamma restaurado exitosamente" >> "$LOGFILE"
-            else
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR al restaurar gamma (exit code: $RESTORE_EXIT)" >> "$LOGFILE"
-            fi
+
+        # Restaurar gamma normal antes de desinstalar (CRÍTICO)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] === RESTAURANDO GAMMA ===" >> "$LOGFILE"
+        if restaurar_gamma; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Gamma restaurado exitosamente" >> "$LOGFILE"
         else
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] /usr/bin/blugon-lite no existe" >> "$LOGFILE"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: No se pudo restaurar gamma" >> "$LOGFILE"
         fi
-        
+
         # Actualizar caché de iconos (sin fallar)
         if [ -x /usr/bin/update-icon-caches ]; then
             update-icon-caches /usr/share/icons/hicolor >> "$LOGFILE" 2>&1 || echo "update-icon-caches falló" >> "$LOGFILE"
@@ -35,18 +77,38 @@ case "$1" in
 
         # Limpiar archivo de autoinicio global
         if [ -f /etc/xdg/autostart/blugon-lite.desktop ]; then
-            rm -f /etc/xdg/autostart/blugon-lite.desktop >> "$LOGFILE" 2>&1 || true
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado /etc/xdg/autostart/blugon-lite.desktop" >> "$LOGFILE"
+            rm -f /etc/xdg/autostart/blugon-lite.desktop >> "$LOGFILE" 2>&1 && \
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado /etc/xdg/autostart/blugon-lite.desktop" >> "$LOGFILE" || \
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR al eliminar /etc/xdg/autostart/blugon-lite.desktop" >> "$LOGFILE"
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] /etc/xdg/autostart/blugon-lite.desktop no existe" >> "$LOGFILE"
         fi
 
-        # Limpiar configs de usuario SOLO si se usa --purge con fuerza
-        # No tocar ~/.config del usuario por defecto
+        # Limpiar configs de usuario en TODOS los homes
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Limpiando configs de usuario..." >> "$LOGFILE"
+        if [ -d /home ]; then
+            for user_home in /home/*; do
+                if [ -d "$user_home" ] && [ "$(basename "$user_home")" != "debian" ]; then
+                    user=$(basename "$user_home")
+                    autostart_file="$user_home/.config/autostart/blugon-lite.desktop"
+                    
+                    if [ -f "$autostart_file" ]; then
+                        rm -f "$autostart_file" >> "$LOGFILE" 2>&1 && \
+                            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado $autostart_file" >> "$LOGFILE" || \
+                            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR al eliminar $autostart_file" >> "$LOGFILE"
+                    else
+                        echo "[$(date '+%Y-%m-%d %H:%M:%S')] $autostart_file no existe" >> "$LOGFILE"
+                    fi
+                fi
+            done
+        fi
+        
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] purge completado" >> "$LOGFILE"
         ;;
 
     remove)
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: remove" >> "$LOGFILE"
-        # En remove normal, no hacer nada adicional
+        # En remove normal (sin purge), no restaurar gamma ni limpiar configs
         ;;
 
     deconfigure)

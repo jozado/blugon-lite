@@ -188,7 +188,7 @@ def is_daemon_running():
 def toggle_daemon():
     """Alternar estado del daemon de blugon-lite."""
     import logging
-    
+
     if is_daemon_running():
         logging.info("Deteniendo daemon...")
         result = subprocess.run(['pkill', '-f', 'blugon-lite'], capture_output=True, text=True)
@@ -203,7 +203,7 @@ def toggle_daemon():
         if not os.path.exists('/usr/bin/blugon-lite'):
             # En desarrollo, usar el script local
             daemon_cmd = ['python3', 'blugon-lite.py', '--interval', '120']
-        
+
         logging.debug(f"Ejecutando: {' '.join(daemon_cmd)}")
         subprocess.Popen(
             daemon_cmd,
@@ -212,3 +212,91 @@ def toggle_daemon():
             start_new_session=True
         )
         return True
+
+
+def restaurar_gamma():
+    """Restaurar gamma de pantalla a valores normales (6500K).
+
+    Intenta múltiples métodos en orden:
+    1. blugon-lite --once (método preferido)
+    2. xgamma -gamma 1.0 (fallback directo)
+    3. xgamma con valores RGB (fallback alternativo)
+
+    Returns:
+        tuple: (exitoso: bool, mensaje: str)
+    """
+    import logging
+    logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
+
+    logging.info("=== Iniciando restauración de gamma ===")
+
+    # Método 1: Intentar con blugon-lite --once
+    logging.info("Intentando método 1: blugon-lite --once")
+    try:
+        result = subprocess.run(
+            ['/usr/bin/blugon-lite', '--once'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        logging.debug(f"blugon-lite --once: returncode={result.returncode}")
+        logging.debug(f"blugon-lite --once stdout: {result.stdout}")
+        logging.debug(f"blugon-lite --once stderr: {result.stderr}")
+
+        if result.returncode == 0:
+            logging.info("✓ blugon-lite --once exitoso")
+            return (True, "Gamma restaurado con blugon-lite")
+        else:
+            logging.warning(f"✗ blugon-lite --once falló: {result.stderr}")
+    except subprocess.TimeoutExpired:
+        logging.error("✗ blugon-lite --once timeout")
+    except Exception as e:
+        logging.error(f"✗ blugon-lite --once excepción: {e}")
+
+    # Método 2: Fallback a xgamma -gamma 1.0
+    logging.info("Intentando método 2: xgamma -gamma 1.0")
+    try:
+        result = subprocess.run(
+            ['xgamma', '-gamma', '1.0'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        logging.debug(f"xgamma: returncode={result.returncode}")
+        logging.debug(f"xgamma stdout: {result.stdout}")
+        logging.debug(f"xgamma stderr: {result.stderr}")
+
+        if result.returncode == 0:
+            logging.info("✓ xgamma -gamma 1.0 exitoso")
+            return (True, "Gamma restaurado con xgamma")
+        else:
+            logging.warning(f"✗ xgamma falló: {result.stderr}")
+    except subprocess.TimeoutExpired:
+        logging.error("✗ xgamma timeout")
+    except FileNotFoundError:
+        logging.error("✗ xgamma no encontrado en PATH")
+    except Exception as e:
+        logging.error(f"✗ xgamma excepción: {e}")
+
+    # Método 3: xgamma con valores RGB explícitos
+    logging.info("Intentando método 3: xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0")
+    try:
+        result = subprocess.run(
+            ['xgamma', '-rgamma', '1.0', '-ggamma', '1.0', '-bgamma', '1.0'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        logging.debug(f"xgamma RGB: returncode={result.returncode}")
+
+        if result.returncode == 0:
+            logging.info("✓ xgamma RGB exitoso")
+            return (True, "Gamma restaurado con xgamma (RGB)")
+        else:
+            logging.warning(f"✗ xgamma RGB falló: {result.stderr}")
+    except Exception as e:
+        logging.error(f"✗ xgamma RGB excepción: {e}")
+
+    # Todos los métodos fallaron
+    logging.error("✗ TODOS los métodos de restauración fallaron")
+    return (False, "Error: No se pudo restaurar gamma. Ejecute 'xgamma -gamma 1.0' manualmente")

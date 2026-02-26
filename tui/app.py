@@ -17,6 +17,7 @@ from .utils import (
     is_daemon_running,
     get_label_for_time,
     load_theme,
+    restaurar_gamma,
 )
 from .widgets import ColorPreview, ScheduleItem
 from .modals import ModalOverlay, EditScheduleModal, AddScheduleModal, DeleteConfirmModal, ThemeSelectorModal
@@ -196,7 +197,7 @@ class BlugonLiteTUI:
         """Detener el daemon de blugon-lite y restaurar gamma normal."""
         import logging
         logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
-        
+
         try:
             logging.debug("detener_daemon() llamado")
             import subprocess
@@ -207,25 +208,24 @@ class BlugonLiteTUI:
             logging.debug(f"pkill stderr: {result.stderr}")
             import time
             time.sleep(0.5)
-            
-            # 2. Restaurar gamma a valores normales (6500K = blanco)
-            logging.debug("Restaurando gamma a 1.0, 1.0, 1.0 con blugon-lite --once")
-            restore_result = subprocess.run(['/usr/bin/blugon-lite', '--once'], capture_output=True, text=True)
-            logging.debug(f"restore returncode: {restore_result.returncode}")
-            logging.debug(f"restore stdout: {restore_result.stdout}")
-            logging.debug(f"restore stderr: {restore_result.stderr}")
-            
+
+            # 2. Restaurar gamma usando función con fallback
+            logging.debug("Restaurando gamma con restaurar_gamma()")
+            exitoso, mensaje = restaurar_gamma()
+            logging.debug(f"restaurar_gamma resultado: exitoso={exitoso}, mensaje={mensaje}")
+
             # 3. Verificar estado
             self.daemon_active = is_daemon_running()
             logging.debug(f"Después de detener, daemon_active = {self.daemon_active}")
             self.refresh_status()
-            
+
             if not self.daemon_active:
-                if restore_result.returncode == 0:
-                    self.show_message("Daemon detenido - Pantalla restaurada", 'success')
+                if exitoso:
+                    self.show_message(f"Daemon detenido - {mensaje}", 'success')
+                    logging.info(f"Mensaje: Daemon detenido - {mensaje}")
                 else:
-                    self.show_message(f"Daemon detenido (error al restaurar: {restore_result.stderr})", 'warning')
-                logging.info(f"Mensaje: Daemon detenido - Pantalla restaurada={restore_result.returncode == 0}")
+                    self.show_message(f"Daemon detenido - {mensaje}", 'warning')
+                    logging.warning(f"Mensaje: Daemon detenido pero {mensaje}")
             else:
                 self.show_message("No se pudo detener el daemon", 'error')
                 logging.info("Mensaje: No se pudo detener")
