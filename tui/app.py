@@ -152,6 +152,50 @@ class BlugonLiteTUI:
         # Reconstruir el header para actualizar el estado
         self.main_frame.contents['header'] = (self._create_header(), self.main_frame.options())
         self.loop.draw_screen()
+    
+    def iniciar_daemon(self):
+        """Iniciar el daemon de blugon-lite."""
+        try:
+            import subprocess
+            subprocess.Popen(
+                ['/usr/bin/blugon-lite', '--interval', '120'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
+            )
+            import time
+            time.sleep(0.5)
+            self.daemon_active = is_daemon_running()
+            self.refresh_status()
+            if self.daemon_active:
+                self.show_message("Daemon iniciado", 'success')
+            else:
+                self.show_message("No se pudo iniciar el daemon", 'error')
+        except Exception as e:
+            self.show_message(f"Error al iniciar: {e}", 'error')
+    
+    def detener_daemon(self):
+        """Detener el daemon de blugon-lite."""
+        try:
+            import subprocess
+            result = subprocess.run(['pkill', '-f', 'blugon-lite --interval'], capture_output=True, text=True)
+            import time
+            time.sleep(0.5)
+            self.daemon_active = is_daemon_running()
+            self.refresh_status()
+            if not self.daemon_active:
+                self.show_message("Daemon detenido", 'success')
+            else:
+                self.show_message("No se pudo detener el daemon", 'error')
+        except Exception as e:
+            self.show_message(f"Error al detener: {e}", 'error')
+    
+    def refrescar_estado(self):
+        """Refrescar el estado del daemon."""
+        self.daemon_active = is_daemon_running()
+        self.refresh_status()
+        estado = "Activo" if self.daemon_active else "Inactivo"
+        self.show_message(f"Estado actualizado: Daemon {estado}", 'info')
 
     def _create_info_panel(self):
         """Crear panel de información con hora y próxima transición."""
@@ -270,15 +314,32 @@ class BlugonLiteTUI:
             ('info', "a"), " Agregar  ",
             ('info', "d"), " Eliminar  ",
             ('info', "t"), " Tema  ",
+            ('info', "g"), " Guardar  ",
             ('info', "q"), " Salir"
+        ])
+        
+        daemon_controls = urwid.Text([
+            ('info', "i"), " Iniciar  ",
+            ('info', "r"), " Refrescar  ",
+            ('info', "s"), " Detener"
         ])
 
         footer_cols = urwid.Columns([
             ('pack', instructions),
         ])
+        
+        daemon_row = urwid.Columns([
+            ('pack', daemon_controls),
+        ])
+        
+        footer_pile = urwid.Pile([
+            ('pack', footer_cols),
+            ('pack', urwid.Divider()),
+            ('pack', daemon_row),
+        ])
 
         return urwid.AttrMap(
-            urwid.Padding(footer_cols, left=1, right=1),
+            urwid.Padding(footer_pile, left=1, right=1),
             'footer'
         )
 
@@ -317,7 +378,7 @@ class BlugonLiteTUI:
     def handle_input(self, key):
         """
         Manejar entrada de teclado global.
-        
+
         Solo se llama para teclas no consumidas por el input_filter.
         """
         # Si hay modal abierto, no manejar nada aquí
@@ -329,7 +390,7 @@ class BlugonLiteTUI:
                 self.show_confirm_exit()
             else:
                 raise urwid.ExitMainLoop()
-        elif key == 's':
+        elif key == 'g':  # Guardar (changed from 's' to free up 's' for Stop)
             self.save_config()
         elif key == 'a':
             self.add_schedule()
@@ -345,6 +406,12 @@ class BlugonLiteTUI:
                 self.show_message("No hay horarios para eliminar", 'warning')
                 return
             self.delete_schedule(self.selected_index)
+        elif key == 'i':  # Iniciar daemon
+            self.iniciar_daemon()
+        elif key == 'r':  # Refrescar estado
+            self.refrescar_estado()
+        elif key == 's':  # Detener daemon (Stop)
+            self.detener_daemon()
 
     def show_message(self, message, style='info'):
         """Mostrar mensaje temporal (toast)."""
