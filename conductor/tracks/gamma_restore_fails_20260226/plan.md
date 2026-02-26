@@ -1,6 +1,6 @@
 # Plan: Gamma no se restaura en TUI y postrm
 
-## Estado: 🔴 EN INVESTIGACIÓN
+## Estado: ✅ IMPLEMENTADO - Pendiente de verificación
 
 ---
 
@@ -12,43 +12,75 @@
 
 ---
 
-## Tareas Pendientes
+## Causa Raíz Identificada
 
-### 1. Diagnóstico del problema de TTY
-- [ ] Verificar si `open('/dev/tty', 'w')` funciona correctamente
-- [ ] Probar alternativa con `os.system()` o `subprocess.Popen()`
-- [ ] Verificar permisos de X11 para root (postrm)
+### TUI
+- `open('/dev/tty', 'w')` + `subprocess.run()` no heredaba correctamente el TTY
+- El subprocess no tenía acceso real al TTY de la terminal padre
 
-### 2. Probar solución alternativa
-- [ ] Intentar con `xgamma` sin redirección de TTY
-- [ ] Probar ejecutar `xgamma` como usuario (no root) en postrm
-- [ ] Considerar usar `xrandr` como alternativa
-
-### 3. Implementar solución
-- [ ] Actualizar `tui/utils.py` con solución verificada
-- [ ] Actualizar `postrm` con solución verificada
-- [ ] Agregar logging mejorado para diagnóstico
-
-### 4. Verificación
-- [ ] Probar en PC del usuario
-- [ ] Confirmar que la pantalla se restaura VISIBILMENTE
-- [ ] Revisar logs
+### postrm
+- postrm se ejecuta como **root**
+- La sesión X11 pertenece al **usuario**
+- `xgamma` necesita ejecutarse como el usuario propietario de la sesión X11
 
 ---
 
-## Hipótesis a Verificar
+## Soluciones Implementadas
 
-### Hipótesis 1: `open('/dev/tty', 'w')` no es suficiente
-Posible solución: Usar `subprocess.Popen()` sin capturar output
+### TUI - `tui/utils.py`
+```python
+# Usar os.system() para heredar el TTY automáticamente
+result = os.system('xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0')
+```
 
-### Hipótesis 2: postrm necesita ejecutar como usuario
-Posible solución: Detectar usuario de sesión X11 y ejecutar `sudo -u $USER`
+### postrm - `debian/DEBIAN/postrm`
+```bash
+# Detectar usuario de la sesión X11
+XUSER=$(who | grep ':0' | awk '{print $1}' | head -1)
 
-### Hipótesis 3: El problema es otro
-Necesitamos más diagnóstico del usuario
+# Ejecutar xgamma como ese usuario
+su "$XUSER" -c "xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0"
+```
+
+---
+
+## Tareas
+
+### 1. Implementar solución TUI ✅ COMPLETADA
+- [x] Cambiar `subprocess.run()` a `os.system()`
+- [x] Logging mantenido
+
+### 2. Implementar solución postrm ✅ COMPLETADA
+- [x] Detectar usuario de sesión X11
+- [x] Ejecutar `xgamma` como ese usuario con `su`
+- [x] Logging mantenido
+
+### 3. Reconstruir paquete ✅ COMPLETADA
+- [x] Ejecutar `bash build-deb.sh`
+- [x] Paquete: `blugon-lite_1.0.0-lite-amd64.deb`
+
+### 4. Testing ⏳ PENDIENTE
+- [ ] Instalar paquete
+- [ ] Probar TUI: iniciar daemon → detener → ¿pantalla se restaura?
+- [ ] Probar postrm: `apt purge` → ¿pantalla se restaura?
+- [ ] Revisar logs
 
 ---
 
 ## Próxima Acción
 
-**ESPERANDO:** Que el usuario ejecute comandos de diagnóstico para entender por qué `xgamma` no funciona desde el código pero sí desde la terminal.
+**TESTING REQUERIDO:** Que el usuario pruebe el paquete en su PC real:
+
+```bash
+# 1. Instalar
+sudo apt install ./blugon-lite_1.0.0-lite-amd64.deb
+
+# 2. Probar TUI
+blugon-lite-tui
+# 'i' = iniciar, 's' = detener
+# ¿La pantalla se restaura al detener?
+
+# 3. Probar desinstalación
+sudo apt purge blugon-lite
+# ¿La pantalla se restaura?
+```
