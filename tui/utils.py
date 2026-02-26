@@ -220,6 +220,9 @@ def restaurar_gamma():
     NOTA: NO usar blugon-lite --once porque aplica gamma según la hora
     (puede ser cálido si es de noche). Usar xgamma directamente.
 
+    IMPORTANTE: xgamma necesita acceso a /dev/tty para funcionar.
+    No usar capture_output=True porque pierde el acceso al TTY.
+
     Intenta métodos en orden:
     1. xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 (restauración directa)
     2. xgamma -gamma 1.0 (fallback)
@@ -228,6 +231,7 @@ def restaurar_gamma():
         tuple: (exitoso: bool, mensaje: str)
     """
     import logging
+    import os
     logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
 
     logging.info("=== Iniciando restauración de gamma ===")
@@ -235,50 +239,51 @@ def restaurar_gamma():
     # Método 1: xgamma con valores RGB explícitos a 1.0 (RECOMENDADO)
     logging.info("Intentando método 1: xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0")
     try:
-        result = subprocess.run(
-            ['xgamma', '-rgamma', '1.0', '-ggamma', '1.0', '-bgamma', '1.0'],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
+        # Abrir /dev/tty para dar acceso real a xgamma
+        with open('/dev/tty', 'w') as tty:
+            result = subprocess.run(
+                ['xgamma', '-rgamma', '1.0', '-ggamma', '1.0', '-bgamma', '1.0'],
+                stdout=tty,
+                stderr=tty,
+                stdin=tty,
+                timeout=5
+            )
         logging.debug(f"xgamma RGB: returncode={result.returncode}")
-        logging.debug(f"xgamma RGB stdout: {result.stdout}")
-        logging.debug(f"xgamma RGB stderr: {result.stderr}")
 
         if result.returncode == 0:
             logging.info("✓ xgamma RGB exitoso - gamma restaurado a 6500K")
             return (True, "Gamma restaurado a 6500K")
         else:
-            logging.warning(f"✗ xgamma RGB falló: {result.stderr}")
+            logging.warning(f"✗ xgamma RGB falló con código {result.returncode}")
     except subprocess.TimeoutExpired:
         logging.error("✗ xgamma RGB timeout")
     except FileNotFoundError:
-        logging.error("✗ xgamma no encontrado en PATH")
+        logging.error("✗ xgamma no encontrado en PATH o /dev/tty no disponible")
     except Exception as e:
         logging.error(f"✗ xgamma RGB excepción: {e}")
 
     # Método 2: Fallback a xgamma -gamma 1.0
     logging.info("Intentando método 2: xgamma -gamma 1.0")
     try:
-        result = subprocess.run(
-            ['xgamma', '-gamma', '1.0'],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
+        with open('/dev/tty', 'w') as tty:
+            result = subprocess.run(
+                ['xgamma', '-gamma', '1.0'],
+                stdout=tty,
+                stderr=tty,
+                stdin=tty,
+                timeout=5
+            )
         logging.debug(f"xgamma: returncode={result.returncode}")
-        logging.debug(f"xgamma stdout: {result.stdout}")
-        logging.debug(f"xgamma stderr: {result.stderr}")
 
         if result.returncode == 0:
             logging.info("✓ xgamma -gamma 1.0 exitoso")
             return (True, "Gamma restaurado con xgamma")
         else:
-            logging.warning(f"✗ xgamma falló: {result.stderr}")
+            logging.warning(f"✗ xgamma falló con código {result.returncode}")
     except subprocess.TimeoutExpired:
         logging.error("✗ xgamma timeout")
     except FileNotFoundError:
-        logging.error("✗ xgamma no encontrado en PATH")
+        logging.error("✗ xgamma no encontrado en PATH o /dev/tty no disponible")
     except Exception as e:
         logging.error(f"✗ xgamma excepción: {e}")
 

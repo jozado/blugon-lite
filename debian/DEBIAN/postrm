@@ -14,11 +14,12 @@ restaurar_gamma() {
     export DISPLAY="${DISPLAY:-:0}"
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] DISPLAY=$DISPLAY" >> "$LOGFILE"
 
-    # Método 1: xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 (RECOMENDADO)
+    # Método 1: xgamma con valores RGB explícitos a 1.0 (RECOMENDADO)
     # NOTA: NO usar blugon-lite --once porque aplica gamma según la hora
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0..." >> "$LOGFILE"
+    # IMPORTANTE: Redirigir a /dev/tty para que xgamma funcione
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 (con /dev/tty)..." >> "$LOGFILE"
     if command -v xgamma > /dev/null 2>&1; then
-        if xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 >> "$LOGFILE" 2>&1; then
+        if xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 < /dev/tty > /dev/tty 2>&1; then
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xgamma RGB exitoso - gamma restaurado a 6500K" >> "$LOGFILE"
             return 0
         else
@@ -29,8 +30,8 @@ restaurar_gamma() {
     fi
 
     # Método 2: Fallback a xgamma -gamma 1.0
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando xgamma -gamma 1.0..." >> "$LOGFILE"
-    if xgamma -gamma 1.0 >> "$LOGFILE" 2>&1; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando xgamma -gamma 1.0 (con /dev/tty)..." >> "$LOGFILE"
+    if xgamma -gamma 1.0 < /dev/tty > /dev/tty 2>&1; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xgamma -gamma 1.0 exitoso" >> "$LOGFILE"
         return 0
     else
@@ -79,7 +80,7 @@ case "$1" in
                 if [ -d "$user_home" ] && [ "$(basename "$user_home")" != "debian" ]; then
                     user=$(basename "$user_home")
                     autostart_file="$user_home/.config/autostart/blugon-lite.desktop"
-                    
+
                     if [ -f "$autostart_file" ]; then
                         rm -f "$autostart_file" >> "$LOGFILE" 2>&1 && \
                             echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado $autostart_file" >> "$LOGFILE" || \
@@ -90,7 +91,26 @@ case "$1" in
                 fi
             done
         fi
-        
+
+        # Limpiar directorios vacíos de /usr/lib/blugon-lite/tui
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Limpiando directorios de /usr/lib/blugon-lite/tui..." >> "$LOGFILE"
+        if [ -d /usr/lib/blugon-lite/tui/widgets ]; then
+            rmdir /usr/lib/blugon-lite/tui/widgets >> "$LOGFILE" 2>&1 && \
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado /usr/lib/blugon-lite/tui/widgets" >> "$LOGFILE" || \
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] No se pudo eliminar /usr/lib/blugon-lite/tui/widgets (no vacío)" >> "$LOGFILE"
+        fi
+        if [ -d /usr/lib/blugon-lite/tui/modals ]; then
+            rmdir /usr/lib/blugon-lite/tui/modals >> "$LOGFILE" 2>&1 && \
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado /usr/lib/blugon-lite/tui/modals" >> "$LOGFILE" || \
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] No se pudo eliminar /usr/lib/blugon-lite/tui/modals (no vacío)" >> "$LOGFILE"
+        fi
+        # Limpiar directorio tui si está vacío
+        if [ -d /usr/lib/blugon-lite/tui ]; then
+            rmdir /usr/lib/blugon-lite/tui >> "$LOGFILE" 2>&1 && \
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado /usr/lib/blugon-lite/tui" >> "$LOGFILE" || \
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] No se pudo eliminar /usr/lib/blugon-lite/tui (no vacío)" >> "$LOGFILE"
+        fi
+
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] purge completado" >> "$LOGFILE"
         ;;
 
