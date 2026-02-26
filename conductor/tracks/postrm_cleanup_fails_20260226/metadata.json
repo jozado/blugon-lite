@@ -1,0 +1,9 @@
+{
+    "track_id": "postrm_cleanup_fails_20260226",
+    "title": "postrm no elimina directorios con __pycache__",
+    "status": "ready",
+    "priority": "medium",
+    "parent": "deb_issues_20260226",
+    "created": "2026-02-26",
+    "updated": "2026-02-26"
+}
