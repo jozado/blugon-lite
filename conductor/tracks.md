@@ -27,6 +27,23 @@ This file tracks all major tracks for the project. Each track has its own detail
   *Link: [./tracks/deb_funcional_20260225/](./tracks/deb_funcional_20260225/)*
   *Parent: blugon_deb_20260223*
   *Priority: CRITICAL - Bloquea lanzamiento del paquete .deb*
-  
+
   **IMPORTANTE:** Este track tiene un archivo `HALLAZGOS_Y_PROBLEMAS.md` que DEBE ser leído antes de comenzar cualquier trabajo.
+
+---
+
+## Bug Fixes Pending
+
+- [ ] **Track: Solucionar issues pendientes del deb**
+  *Link: [./tracks/deb_issues_20260226/](./tracks/deb_issues_20260226/)*
+  *Parent: deb_funcional_20260225*
+  *Priority: HIGH - Mejoras críticas post-instalación*
+
+  **Issues a resolver:**
+  1. Restaurar gamma de pantalla al detener daemon (TUI)
+  2. Restaurar gamma al desinstalar paquete
+  3. Eliminar autoinicio correctamente al desinstalar
+  4. Mejorar TUI ( UX, validaciones )
+
+  **Archivo de contexto:** `DEBUG_SESSION.md` con toda la información de depuración.
 

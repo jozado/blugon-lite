@@ -8,6 +8,21 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] PID: $$, USER: $(whoami)" >> "$LOGFILE"
 case "$1" in
     purge)
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando caso: purge" >> "$LOGFILE"
+        
+        # Restaurar gamma normal antes de desinstalar
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Restaurando gamma normal (6500K)..." >> "$LOGFILE"
+        if [ -x /usr/bin/blugon-lite ]; then
+            /usr/bin/blugon-lite --once >> "$LOGFILE" 2>&1
+            RESTORE_EXIT=$?
+            if [ $RESTORE_EXIT -eq 0 ]; then
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Gamma restaurado exitosamente" >> "$LOGFILE"
+            else
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR al restaurar gamma (exit code: $RESTORE_EXIT)" >> "$LOGFILE"
+            fi
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] /usr/bin/blugon-lite no existe" >> "$LOGFILE"
+        fi
+        
         # Actualizar caché de iconos (sin fallar)
         if [ -x /usr/bin/update-icon-caches ]; then
             update-icon-caches /usr/share/icons/hicolor >> "$LOGFILE" 2>&1 || echo "update-icon-caches falló" >> "$LOGFILE"

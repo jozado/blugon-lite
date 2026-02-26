@@ -160,36 +160,28 @@ def load_theme():
 
 def is_daemon_running():
     """Verificar si el daemon de blugon-lite está en ejecución.
-    
-    Busca múltiples patrones para detectar el daemon:
-    - blugon-lite (comando instalado en /usr/bin)
-    - blugon-lite.py (script de desarrollo)
-    - --interval (argumento característico del daemon)
+
+    Busca específicamente el proceso del daemon con --interval.
+    NO cuenta el TUI ni otros procesos de blugon-lite.
     """
     import logging
     logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
-    
-    patrones = [
-        'blugon-lite',      # Comando instalado
-        'blugon-lite.py',   # Script de desarrollo
-        'blugon-lite --interval',  # Daemon con intervalo
-    ]
-    
-    for patron in patrones:
-        try:
-            result = subprocess.run(
-                ['pgrep', '-f', patron],
-                capture_output=True,
-                text=True
-            )
-            logging.debug(f"pgrep -f '{patron}': returncode={result.returncode}, stdout='{result.stdout.strip()}'")
-            if result.returncode == 0 and result.stdout.strip():
-                logging.info(f"Daemon detectado con patrón: '{patron}'")
-                return True
-        except Exception as e:
-            logging.error(f"Error al buscar patrón '{patron}': {e}")
-    
-    logging.info("No se detectó el daemon con ningún patrón")
+
+    # Buscar específicamente el daemon con --interval
+    try:
+        result = subprocess.run(
+            ['pgrep', '-f', 'blugon-lite --interval'],
+            capture_output=True,
+            text=True
+        )
+        logging.debug(f"pgrep -f 'blugon-lite --interval': returncode={result.returncode}, stdout='{result.stdout.strip()}'")
+        if result.returncode == 0 and result.stdout.strip():
+            logging.info(f"Daemon detectado con patrón: 'blugon-lite --interval'")
+            return True
+    except Exception as e:
+        logging.error(f"Error al buscar daemon: {e}")
+
+    logging.info("No se detectó el daemon")
     return False
 
 

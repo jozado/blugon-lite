@@ -148,14 +148,27 @@ class BlugonLiteTUI:
 
     def refresh_status(self):
         """Actualizar el estado del daemon en la UI."""
+        import logging
+        logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
+        
+        logging.debug("refresh_status() llamado")
         self.daemon_active = is_daemon_running()
+        logging.debug(f"daemon_active = {self.daemon_active}")
+        
         # Reconstruir el header para actualizar el estado
         self.main_frame.contents['header'] = (self._create_header(), self.main_frame.options())
+        logging.debug("Header actualizado en main_frame")
+        
         self.loop.draw_screen()
+        logging.debug("draw_screen() llamado")
     
     def iniciar_daemon(self):
         """Iniciar el daemon de blugon-lite."""
+        import logging
+        logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
+        
         try:
+            logging.debug("iniciar_daemon() llamado")
             import subprocess
             subprocess.Popen(
                 ['/usr/bin/blugon-lite', '--interval', '120'],
@@ -163,39 +176,75 @@ class BlugonLiteTUI:
                 stderr=subprocess.DEVNULL,
                 start_new_session=True
             )
+            logging.debug("Daemon iniciado con Popen")
             import time
             time.sleep(0.5)
             self.daemon_active = is_daemon_running()
+            logging.debug(f"Después de iniciar, daemon_active = {self.daemon_active}")
             self.refresh_status()
             if self.daemon_active:
                 self.show_message("Daemon iniciado", 'success')
+                logging.info("Mensaje: Daemon iniciado")
             else:
                 self.show_message("No se pudo iniciar el daemon", 'error')
+                logging.info("Mensaje: No se pudo iniciar")
         except Exception as e:
+            logging.error(f"Error en iniciar_daemon: {e}")
             self.show_message(f"Error al iniciar: {e}", 'error')
     
     def detener_daemon(self):
-        """Detener el daemon de blugon-lite."""
+        """Detener el daemon de blugon-lite y restaurar gamma normal."""
+        import logging
+        logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
+        
         try:
+            logging.debug("detener_daemon() llamado")
             import subprocess
+            # 1. Matar el daemon
             result = subprocess.run(['pkill', '-f', 'blugon-lite --interval'], capture_output=True, text=True)
+            logging.debug(f"pkill returncode: {result.returncode}")
+            logging.debug(f"pkill stdout: {result.stdout}")
+            logging.debug(f"pkill stderr: {result.stderr}")
             import time
             time.sleep(0.5)
+            
+            # 2. Restaurar gamma a valores normales (6500K = blanco)
+            logging.debug("Restaurando gamma a 1.0, 1.0, 1.0 con blugon-lite --once")
+            restore_result = subprocess.run(['/usr/bin/blugon-lite', '--once'], capture_output=True, text=True)
+            logging.debug(f"restore returncode: {restore_result.returncode}")
+            logging.debug(f"restore stdout: {restore_result.stdout}")
+            logging.debug(f"restore stderr: {restore_result.stderr}")
+            
+            # 3. Verificar estado
             self.daemon_active = is_daemon_running()
+            logging.debug(f"Después de detener, daemon_active = {self.daemon_active}")
             self.refresh_status()
+            
             if not self.daemon_active:
-                self.show_message("Daemon detenido", 'success')
+                if restore_result.returncode == 0:
+                    self.show_message("Daemon detenido - Pantalla restaurada", 'success')
+                else:
+                    self.show_message(f"Daemon detenido (error al restaurar: {restore_result.stderr})", 'warning')
+                logging.info(f"Mensaje: Daemon detenido - Pantalla restaurada={restore_result.returncode == 0}")
             else:
                 self.show_message("No se pudo detener el daemon", 'error')
+                logging.info("Mensaje: No se pudo detener")
         except Exception as e:
+            logging.error(f"Error en detener_daemon: {e}")
             self.show_message(f"Error al detener: {e}", 'error')
     
     def refrescar_estado(self):
         """Refrescar el estado del daemon."""
+        import logging
+        logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
+        
+        logging.debug("refrescar_estado() llamado")
         self.daemon_active = is_daemon_running()
+        logging.debug(f"daemon_active = {self.daemon_active}")
         self.refresh_status()
         estado = "Activo" if self.daemon_active else "Inactivo"
         self.show_message(f"Estado actualizado: Daemon {estado}", 'info')
+        logging.info(f"Mensaje: Estado actualizado: Daemon {estado}")
 
     def _create_info_panel(self):
         """Crear panel de información con hora y próxima transición."""
@@ -333,7 +382,6 @@ class BlugonLiteTUI:
         
         footer_pile = urwid.Pile([
             ('pack', footer_cols),
-            ('pack', urwid.Divider()),
             ('pack', daemon_row),
         ])
 

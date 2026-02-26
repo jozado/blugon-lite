@@ -1,0 +1,22 @@
+{
+  "track_id": "deb_issues_20260226",
+  "title": "Solucionar issues pendientes del deb",
+  "description": "Resolver issues críticos de restauración de gamma y limpieza al desinstalar",
+  "status": "pending",
+  "priority": "HIGH",
+  "parent_track": "deb_funcional_20260225",
+  "created_date": "2026-02-26",
+  "estimated_hours": 4,
+  "actual_hours": 0,
+  "tags": ["bugfix", "deb", "tui", "gamma", "cleanup"],
+  "blocking_issues": [
+    "Gamma no se restaura al detener daemon",
+    "Gamma no se restaura al desinstalar",
+    "Autoinicio persiste después de desinstalar"
+  ],
+  "dependencies": [
+    "Diagnóstico del usuario (comandos de prueba)",
+    "Acceso a logs de /tmp/blugon-tui-debug.log"
+  ],
+  "notes": "Track creado para continuar la depuración iniciada el 2026-02-25. Ver DEBUG_SESSION.md para contexto completo."
+}
