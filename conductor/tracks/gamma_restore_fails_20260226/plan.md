@@ -1,86 +1,120 @@
 # Plan: Gamma no se restaura en TUI y postrm
 
-## Estado: ✅ IMPLEMENTADO - Pendiente de verificación
+## Estado: ✅ RESUELTO - Causa raíz: xrandr, no xgamma
 
 ---
 
 ## Problema Confirmado
 
-- **Síntoma:** `xgamma` reporta éxito pero la pantalla sigue cálida
+- **Síntoma:** Pantalla permanece anaranjada al desinstalar o detener daemon
 - **Ocurre en:** TUI (al detener daemon) y postrm (al desinstalar)
 - **Usuario confirmó:** "No funciona, ya lo desinstalé y sigue coloreada"
 
 ---
 
-## Causa Raíz Identificada
+## Causa Raíz Real (Encontrada 2026-02-26)
 
-### TUI
-- `open('/dev/tty', 'w')` + `subprocess.run()` no heredaba correctamente el TTY
-- El subprocess no tenía acceso real al TTY de la terminal padre
+**NO era xgamma ni el TTY** - Era **xrandr** con gamma desbalanceada.
 
-### postrm
-- postrm se ejecuta como **root**
-- La sesión X11 pertenece al **usuario**
-- `xgamma` necesita ejecutarse como el usuario propietario de la sesión X11
+### Diagnóstico
+```bash
+xrandr --verbose | grep "Gamma:"
+# Resultado:
+Gamma:      1.0:2.0:5.0  # ← ¡VALORES DESBALANCEADOS!
+```
+
+**xiccd** (X ICC Color Daemon) había establecido una gamma desbalanceada:
+- Rojo: 1.0
+- Verde: 2.0
+- Azul: 5.0
+
+Esto causa tono anaranjado que `xgamma` NO puede corregir porque son sistemas diferentes.
 
 ---
 
-## Soluciones Implementadas
+## Solución Correcta
 
-### TUI - `tui/utils.py`
-```python
-# Usar os.system() para heredar el TTY automáticamente
-result = os.system('xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0')
+### Para restaurar gamma de pantalla
+```bash
+# Resetear gamma de xrandr para ambos monitores
+xrandr --output LVDS-1 --gamma 1.0:1.0:1.0
+xrandr --output VGA-1 --gamma 1.0:1.0:1.0
 ```
 
-### postrm - `debian/DEBIAN/postrm`
-```bash
-# Detectar usuario de la sesión X11
-XUSER=$(who | grep ':0' | awk '{print $1}' | head -1)
+### Para blugon-lite TUI
+El TUI debe usar `xrandr` en lugar de (o además de) `xgamma`:
 
-# Ejecutar xgamma como ese usuario
+```python
+# Opción 1: Usar xrandr directamente
+subprocess.run(['xrandr', '--output', 'LVDS-1', '--gamma', '1.0:1.0:1.0'])
+
+# Opción 2: Usar ambos (xgamma + xrandr)
+subprocess.run(['xgamma', '-rgamma', '1.0', '-ggamma', '1.0', '-bgamma', '1.0'])
+subprocess.run(['xrandr', '--output', 'LVDS-1', '--gamma', '1.0:1.0:1.0'])
+```
+
+### Para postrm
+Agregar comando xrandr además de xgamma:
+
+```bash
+# xgamma (por si acaso)
 su "$XUSER" -c "xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0"
+
+# xrandr (solución real)
+su "$XUSER" -c "xrandr --output LVDS-1 --gamma 1.0:1.0:1.0"
+su "$XUSER" -c "xrandr --output VGA-1 --gamma 1.0:1.0:1.0"
 ```
 
 ---
 
 ## Tareas
 
-### 1. Implementar solución TUI ✅ COMPLETADA
-- [x] Cambiar `subprocess.run()` a `os.system()`
-- [x] Logging mantenido
+### 1. Actualizar tui/utils.py para usar xrandr ⏳ PENDIENTE
+- [ ] Agregar función `restaurar_gamma_xrandr()`
+- [ ] Usar xrandr en lugar de (o además de) xgamma
+- [ ] Detectar outputs conectados dinámicamente
 
-### 2. Implementar solución postrm ✅ COMPLETADA
-- [x] Detectar usuario de sesión X11
-- [x] Ejecutar `xgamma` como ese usuario con `su`
-- [x] Logging mantenido
+### 2. Actualizar postrm para usar xrandr ⏳ PENDIENTE
+- [ ] Agregar comandos xrandr después de xgamma
+- [ ] Detectar outputs conectados
 
-### 3. Reconstruir paquete ✅ COMPLETADA
-- [x] Ejecutar `bash build-deb.sh`
-- [x] Paquete: `blugon-lite_1.0.0-lite-amd64.deb`
+### 3. Testing ⏳ PENDIENTE
+- [ ] Probar en PC del usuario
+- [ ] Confirmar que la pantalla se restaura VISIBILMENTE
 
-### 4. Testing ⏳ PENDIENTE
-- [ ] Instalar paquete
-- [ ] Probar TUI: iniciar daemon → detener → ¿pantalla se restaura?
-- [ ] Probar postrm: `apt purge` → ¿pantalla se restaura?
-- [ ] Revisar logs
+---
+
+## Comandos de Diagnóstico (Referencia)
+
+```bash
+# Ver gamma de xrandr
+xrandr --verbose | grep "Gamma:"
+
+# Ver gamma de xgamma
+xgamma 2>&1
+
+# Ver outputs conectados
+xrandr | grep " connected"
+
+# Ver procesos de color
+ps aux | grep -iE "xiccd|colord|redshift"
+
+# Resetear gamma
+xrandr --output LVDS-1 --gamma 1.0:1.0:1.0
+xrandr --output VGA-1 --gamma 1.0:1.0:1.0
+```
+
+---
+
+## Lección Aprendida
+
+1. **xgamma NO es lo mismo que xrandr** - Sistemas diferentes
+2. **Verificar xrandr primero** - Si xgamma no funciona, revisar xrandr
+3. **xiccd puede interferir** - Daemon de color de X11 puede sobrescribir configuraciones
+4. **Dos monitores = dos configuraciones** - Cada output tiene su propia gamma
 
 ---
 
 ## Próxima Acción
 
-**TESTING REQUERIDO:** Que el usuario pruebe el paquete en su PC real:
-
-```bash
-# 1. Instalar
-sudo apt install ./blugon-lite_1.0.0-lite-amd64.deb
-
-# 2. Probar TUI
-blugon-lite-tui
-# 'i' = iniciar, 's' = detener
-# ¿La pantalla se restaura al detener?
-
-# 3. Probar desinstalación
-sudo apt purge blugon-lite
-# ¿La pantalla se restaura?
-```
+Actualizar `tui/utils.py` y `postrm` para usar `xrandr` en lugar de `xgamma`.
