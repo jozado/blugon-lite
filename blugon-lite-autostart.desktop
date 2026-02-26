@@ -10,3 +10,5 @@ Keywords=blue light;filter;screen;temperature;
 StartupNotify=false
 X-GNOME-Autostart-enabled=true
 X-GNOME-Autostart-Delay=5
+X-XFCE-Source=file:///usr/share/applications/blugon-lite-autostart.desktop
+OnlyShowIn=XFCE;GNOME;KDE;MATE;Cinnamon;

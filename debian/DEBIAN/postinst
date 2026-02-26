@@ -42,6 +42,13 @@ case "$1" in
                         cp /usr/share/applications/blugon-lite-autostart.desktop "$autostart_dir/blugon-lite.desktop" 2>/dev/null || true
                         chown $user:$user "$autostart_dir/blugon-lite.desktop" 2>/dev/null || true
                     fi
+                    
+                    # Registrar explícitamente en XFCE si está disponible
+                    if command -v xfce4-session-settings > /dev/null 2>&1; then
+                        echo "  XFCE detectado: Agregando al autoinicio de XFCE..."
+                        # Usar xfce4-session-settings para registrar la aplicación
+                        su $user -c "xfce4-session-settings --sm-save-legacy 2>/dev/null || true"
+                    fi
                 fi
             done
         fi

@@ -22,7 +22,7 @@ MAKE_INSTALL_PREFIX = '/usr'
 DISPLAY = getenv('DISPLAY')
 ONCE = False
 INTERVAL = 120
-CONFIG_DIR = getenv('XDG_CONFIG_HOME') or getenv('HOME') + '/.config'
+CONFIG_DIR = getenv('XDG_CONFIG_HOME') or (getenv('HOME') or '/root') + '/.config'
 CONFIG_DIR += '/blugon'
 BACKEND = 'scg'
 
@@ -217,22 +217,51 @@ def main():
     # Read gamma configuration (uses fallback if config dir doesn't exist)
     list_gamma, list_minutes = read_gamma(CONFIG_DIR)
 
+    # Setup logging
+    import logging
+    import pwd
+    # Usar /tmp/blugon-lite-daemon.log para el usuario actual
+    try:
+        user = pwd.getpwuid(os.getuid()).pw_name
+        log_file = f'/tmp/blugon-lite-{user}.log'
+    except:
+        log_file = '/tmp/blugon-lite-daemon.log'
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.DEBUG,  # DEBUG para ver todos los detalles
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    logging.info(f"blugon-lite iniciado - Backend: {BACKEND}, Interval: {INTERVAL}s")
+    logging.info(f"Config dir: {CONFIG_DIR}")
+    logging.info(f"Horarios cargados: {len(list_gamma)}")
+
     def apply_gamma():
         minute = get_minute()
         r, g, b = calc_gamma(minute, list_minutes, list_gamma)
         call_backend(BACKEND, r, g, b)
+        logging.debug(f"Gamma aplicado: R={r:.3f}, G={g:.3f}, B={b:.3f} (minuto={minute})")
 
     if ONCE:
+        logging.info("Modo --once: aplicando gamma y saliendo")
         apply_gamma()
+        logging.info("Gamma aplicado exitosamente")
         return
 
     # Main loop
+    logging.info(f"Iniciando bucle principal (interval={INTERVAL}s)")
+    restart_count = 0
     while True:
         try:
             apply_gamma()
             time.sleep(INTERVAL)
-        except:
-            break
+        except Exception as e:
+            restart_count += 1
+            logging.error(f"Error en iteración {restart_count}: {e}")
+            if restart_count >= 5:
+                logging.critical("Demasiados errores consecutivos, saliendo")
+                break
+            time.sleep(5)  # Esperar antes de reintentar
 
 
 if __name__ == "__main__":
