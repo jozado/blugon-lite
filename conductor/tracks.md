@@ -23,7 +23,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## Critical Fixes
 
-- [ ] **Track: Crear deb funcional**
+- [x] **Track: Crear deb funcional**
   *Link: [./tracks/deb_funcional_20260225/](./tracks/deb_funcional_20260225/)*
   *Parent: blugon_deb_20260223*
   *Priority: CRITICAL - Bloquea lanzamiento del paquete .deb*
