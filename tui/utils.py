@@ -220,8 +220,7 @@ def restaurar_gamma():
     NOTA: NO usar blugon-lite --once porque aplica gamma según la hora
     (puede ser cálido si es de noche). Usar xgamma directamente.
 
-    IMPORTANTE: xgamma necesita acceso a /dev/tty para funcionar.
-    No usar capture_output=True porque pierde el acceso al TTY.
+    IMPORTANTE: Usar os.system() para heredar el TTY de la terminal padre.
 
     Intenta métodos en orden:
     1. xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 (restauración directa)
@@ -239,51 +238,29 @@ def restaurar_gamma():
     # Método 1: xgamma con valores RGB explícitos a 1.0 (RECOMENDADO)
     logging.info("Intentando método 1: xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0")
     try:
-        # Abrir /dev/tty para dar acceso real a xgamma
-        with open('/dev/tty', 'w') as tty:
-            result = subprocess.run(
-                ['xgamma', '-rgamma', '1.0', '-ggamma', '1.0', '-bgamma', '1.0'],
-                stdout=tty,
-                stderr=tty,
-                stdin=tty,
-                timeout=5
-            )
-        logging.debug(f"xgamma RGB: returncode={result.returncode}")
+        # Usar os.system() para heredar el TTY automáticamente
+        result = os.system('xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0')
+        logging.debug(f"xgamma RGB: returncode={result}")
 
-        if result.returncode == 0:
+        if result == 0:
             logging.info("✓ xgamma RGB exitoso - gamma restaurado a 6500K")
             return (True, "Gamma restaurado a 6500K")
         else:
-            logging.warning(f"✗ xgamma RGB falló con código {result.returncode}")
-    except subprocess.TimeoutExpired:
-        logging.error("✗ xgamma RGB timeout")
-    except FileNotFoundError:
-        logging.error("✗ xgamma no encontrado en PATH o /dev/tty no disponible")
+            logging.warning(f"✗ xgamma RGB falló con código {result}")
     except Exception as e:
         logging.error(f"✗ xgamma RGB excepción: {e}")
 
     # Método 2: Fallback a xgamma -gamma 1.0
     logging.info("Intentando método 2: xgamma -gamma 1.0")
     try:
-        with open('/dev/tty', 'w') as tty:
-            result = subprocess.run(
-                ['xgamma', '-gamma', '1.0'],
-                stdout=tty,
-                stderr=tty,
-                stdin=tty,
-                timeout=5
-            )
-        logging.debug(f"xgamma: returncode={result.returncode}")
+        result = os.system('xgamma -gamma 1.0')
+        logging.debug(f"xgamma: returncode={result}")
 
-        if result.returncode == 0:
+        if result == 0:
             logging.info("✓ xgamma -gamma 1.0 exitoso")
             return (True, "Gamma restaurado con xgamma")
         else:
-            logging.warning(f"✗ xgamma falló con código {result.returncode}")
-    except subprocess.TimeoutExpired:
-        logging.error("✗ xgamma timeout")
-    except FileNotFoundError:
-        logging.error("✗ xgamma no encontrado en PATH o /dev/tty no disponible")
+            logging.warning(f"✗ xgamma falló con código {result}")
     except Exception as e:
         logging.error(f"✗ xgamma excepción: {e}")
 
