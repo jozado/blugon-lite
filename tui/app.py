@@ -314,7 +314,6 @@ class BlugonLiteTUI:
             ('info', "a"), " Agregar  ",
             ('info', "d"), " Eliminar  ",
             ('info', "t"), " Tema  ",
-            ('info', "g"), " Guardar  ",
             ('info', "q"), " Salir"
         ])
         
@@ -390,8 +389,6 @@ class BlugonLiteTUI:
                 self.show_confirm_exit()
             else:
                 raise urwid.ExitMainLoop()
-        elif key == 'g':  # Guardar (changed from 's' to free up 's' for Stop)
-            self.save_config()
         elif key == 'a':
             self.add_schedule()
         elif key == 't':
