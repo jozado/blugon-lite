@@ -60,6 +60,16 @@ xrandr | grep " connected"
 2. **Verificar xrandr primero** - Si xgamma no funciona, revisar xrandr
 3. **xiccd puede interferir** - El daemon de color de X11 puede sobrescribir configuraciones
 4. **Dos monitores = dos configuraciones** - Cada output tiene su propia gamma
+5. **BACKEND SCG usa Xrandr** - El backend principal del proyecto usa `XRRSetCrtcGamma()`
+   - Para restaurar gamma, usar el mismo sistema (xrandr), no xgamma
+   - xgamma es el backend fallback, no puede deshacer cambios de Xrandr
+
+### Arquitectura de Backends
+
+| Backend | Tecnología | Estado | Función | Comando equivalente |
+|---------|-----------|--------|---------|---------------------|
+| **SCG** | C + Xrandr | ✅ PRINCIPAL (default) | `XRRSetCrtcGamma()` | `xrandr --output --gamma` |
+| **xgamma** | xorg-xgamma | ⚠️ FALLBACK | `xgamma -gamma` | `xgamma -gamma` |
 
 ### Referencia Rápida
 ```bash
