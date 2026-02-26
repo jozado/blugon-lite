@@ -12,6 +12,7 @@ install:
 	install -D -m755 blugon-lite $(DESTDIR)$(PREFIX)/bin/blugon-lite
 	install -D -m755 blugon-lite-tui $(DESTDIR)$(PREFIX)/bin/blugon-lite-tui
 	install -D -m755 blugon-lite-monitor $(DESTDIR)$(PREFIX)/bin/blugon-lite-monitor
+	install -D -m755 blugon-lite-autostart.sh $(DESTDIR)$(PREFIX)/bin/blugon-lite-autostart.sh
 	install -D -m755 blugon-lite-tui.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/blugon-lite-tui.py
 	install -D -m644 tui/__init__.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/tui/__init__.py
 	install -D -m644 tui/app.py $(DESTDIR)$(PREFIX)/lib/blugon-lite/tui/app.py
