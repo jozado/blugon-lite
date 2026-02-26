@@ -56,3 +56,53 @@
 - Para sistemas: revisar logs existentes antes de agregar instrumentación nueva.
 
 **Aplicación:** Este enfoque aplica a toda depuración de código y sistema en los proyectos de este directorio y el entorno Debian 13.
+
+---
+
+## Documentación de Hallazgos y Soluciones
+
+**Principio:** Cuando se encuentren soluciones a problemas que tomen tiempo resolver, o soluciones simples a problemas que puedan repetirse en el futuro, **documentar inmediatamente** en `HALLAZGOS_Y_SOLUCIONES.md`.
+
+### Cuándo Actualizar HALLAZGOS_Y_SOLUCIONES.md
+
+1. **Problemas que tomaron >30 minutos resolver** - Documentar causa raíz y solución
+2. **Soluciones no obvias** - Workarounds, hacks, o enfoques creativos
+3. **Comportamientos del sistema** - Quirks de X11, permisos, servicios, etc.
+4. **Errores recurrentes** - Problemas que pueden volver a aparecer
+5. **Comandos de diagnóstico útiles** - Snippets para debugging futuro
+6. **Arquitectura del sistema** - Cómo interactúan los componentes
+
+### Formato del Documento
+
+```markdown
+## FECHA: Título descriptivo del problema
+
+### Problema
+Descripción clara del síntoma observado
+
+### Diagnóstico
+Comandos usados para investigar
+
+### Causa Raíz
+Explicación técnica del porqué ocurrió
+
+### Solución
+Pasos exactos para resolver
+
+### Lección Aprendida
+Qué evitar o verificar en el futuro
+
+### Referencia Rápida
+Comandos o snippets útiles para resolver rápidamente si vuelve a ocurrir
+```
+
+### Beneficios
+
+- **Evita repetir errores** - El equipo no cae en lo mismo dos veces
+- **Debugging más rápido** - Soluciones ya documentadas para consulta rápida
+- **Onboarding** - Nuevos desarrolladores aprenden de problemas pasados
+- **Memoria institucional** - El conocimiento no se pierde
+
+**Ejemplo real:** Problema "Gamma no se restaura" → Causa: xrandr vs xgamma → Solución: Usar xrandr --output --gamma
+
+**Aplicación:** Esta práctica aplica a todo el proyecto blugon-lite y proyectos futuros.
