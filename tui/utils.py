@@ -215,12 +215,14 @@ def toggle_daemon():
 
 
 def restaurar_gamma():
-    """Restaurar gamma de pantalla a valores normales (6500K).
+    """Restaurar gamma de pantalla a valores normales (6500K / RGB 1.0).
 
-    Intenta múltiples métodos en orden:
-    1. blugon-lite --once (método preferido)
-    2. xgamma -gamma 1.0 (fallback directo)
-    3. xgamma con valores RGB (fallback alternativo)
+    NOTA: NO usar blugon-lite --once porque aplica gamma según la hora
+    (puede ser cálido si es de noche). Usar xgamma directamente.
+
+    Intenta métodos en orden:
+    1. xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 (restauración directa)
+    2. xgamma -gamma 1.0 (fallback)
 
     Returns:
         tuple: (exitoso: bool, mensaje: str)
@@ -230,28 +232,30 @@ def restaurar_gamma():
 
     logging.info("=== Iniciando restauración de gamma ===")
 
-    # Método 1: Intentar con blugon-lite --once
-    logging.info("Intentando método 1: blugon-lite --once")
+    # Método 1: xgamma con valores RGB explícitos a 1.0 (RECOMENDADO)
+    logging.info("Intentando método 1: xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0")
     try:
         result = subprocess.run(
-            ['/usr/bin/blugon-lite', '--once'],
+            ['xgamma', '-rgamma', '1.0', '-ggamma', '1.0', '-bgamma', '1.0'],
             capture_output=True,
             text=True,
             timeout=5
         )
-        logging.debug(f"blugon-lite --once: returncode={result.returncode}")
-        logging.debug(f"blugon-lite --once stdout: {result.stdout}")
-        logging.debug(f"blugon-lite --once stderr: {result.stderr}")
+        logging.debug(f"xgamma RGB: returncode={result.returncode}")
+        logging.debug(f"xgamma RGB stdout: {result.stdout}")
+        logging.debug(f"xgamma RGB stderr: {result.stderr}")
 
         if result.returncode == 0:
-            logging.info("✓ blugon-lite --once exitoso")
-            return (True, "Gamma restaurado con blugon-lite")
+            logging.info("✓ xgamma RGB exitoso - gamma restaurado a 6500K")
+            return (True, "Gamma restaurado a 6500K")
         else:
-            logging.warning(f"✗ blugon-lite --once falló: {result.stderr}")
+            logging.warning(f"✗ xgamma RGB falló: {result.stderr}")
     except subprocess.TimeoutExpired:
-        logging.error("✗ blugon-lite --once timeout")
+        logging.error("✗ xgamma RGB timeout")
+    except FileNotFoundError:
+        logging.error("✗ xgamma no encontrado en PATH")
     except Exception as e:
-        logging.error(f"✗ blugon-lite --once excepción: {e}")
+        logging.error(f"✗ xgamma RGB excepción: {e}")
 
     # Método 2: Fallback a xgamma -gamma 1.0
     logging.info("Intentando método 2: xgamma -gamma 1.0")
@@ -278,25 +282,6 @@ def restaurar_gamma():
     except Exception as e:
         logging.error(f"✗ xgamma excepción: {e}")
 
-    # Método 3: xgamma con valores RGB explícitos
-    logging.info("Intentando método 3: xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0")
-    try:
-        result = subprocess.run(
-            ['xgamma', '-rgamma', '1.0', '-ggamma', '1.0', '-bgamma', '1.0'],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        logging.debug(f"xgamma RGB: returncode={result.returncode}")
-
-        if result.returncode == 0:
-            logging.info("✓ xgamma RGB exitoso")
-            return (True, "Gamma restaurado con xgamma (RGB)")
-        else:
-            logging.warning(f"✗ xgamma RGB falló: {result.stderr}")
-    except Exception as e:
-        logging.error(f"✗ xgamma RGB excepción: {e}")
-
     # Todos los métodos fallaron
     logging.error("✗ TODOS los métodos de restauración fallaron")
-    return (False, "Error: No se pudo restaurar gamma. Ejecute 'xgamma -gamma 1.0' manualmente")
+    return (False, "Error: No se pudo restaurar gamma. Ejecute 'xgamma -rgamma 1.0' manualmente")
