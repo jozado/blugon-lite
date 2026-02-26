@@ -92,23 +92,14 @@ case "$1" in
             done
         fi
 
-        # Limpiar directorios vacíos de /usr/lib/blugon-lite/tui
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Limpiando directorios de /usr/lib/blugon-lite/tui..." >> "$LOGFILE"
-        if [ -d /usr/lib/blugon-lite/tui/widgets ]; then
-            rmdir /usr/lib/blugon-lite/tui/widgets >> "$LOGFILE" 2>&1 && \
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado /usr/lib/blugon-lite/tui/widgets" >> "$LOGFILE" || \
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] No se pudo eliminar /usr/lib/blugon-lite/tui/widgets (no vacío)" >> "$LOGFILE"
-        fi
-        if [ -d /usr/lib/blugon-lite/tui/modals ]; then
-            rmdir /usr/lib/blugon-lite/tui/modals >> "$LOGFILE" 2>&1 && \
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado /usr/lib/blugon-lite/tui/modals" >> "$LOGFILE" || \
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] No se pudo eliminar /usr/lib/blugon-lite/tui/modals (no vacío)" >> "$LOGFILE"
-        fi
-        # Limpiar directorio tui si está vacío
-        if [ -d /usr/lib/blugon-lite/tui ]; then
-            rmdir /usr/lib/blugon-lite/tui >> "$LOGFILE" 2>&1 && \
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado /usr/lib/blugon-lite/tui" >> "$LOGFILE" || \
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] No se pudo eliminar /usr/lib/blugon-lite/tui (no vacío)" >> "$LOGFILE"
+        # Limpiar directorio /usr/lib/blugon-lite recursivamente (purge debe eliminar TODO)
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] Limpiando /usr/lib/blugon-lite recursivamente..." >> "$LOGFILE"
+        if [ -d /usr/lib/blugon-lite ]; then
+            rm -rf /usr/lib/blugon-lite >> "$LOGFILE" 2>&1 && \
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Eliminado /usr/lib/blugon-lite recursivamente" >> "$LOGFILE" || \
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR al eliminar /usr/lib/blugon-lite" >> "$LOGFILE"
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] /usr/lib/blugon-lite no existe" >> "$LOGFILE"
         fi
 
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] purge completado" >> "$LOGFILE"
