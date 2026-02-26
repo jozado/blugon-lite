@@ -7,16 +7,16 @@ Resolver los issues críticos restantes en el paquete .deb de blugon-lite relaci
 - Limpieza completa al desinstalar
 - Mejoras de UX en el TUI
 
-**Parent Track:** `deb_funcional_20260225`  
-**Priority:** HIGH  
-**Estado:** Pendiente - Esperando diagnóstico del usuario
+**Parent Track:** `deb_funcional_20260225`
+**Priority:** HIGH
+**Estado:** ✅ IMPLEMENTADO - Pendiente de verificación
 
 ---
 
 ## Issues a Resolver
 
 ### Issue #1: Restaurar gamma al detener daemon (TUI)
-**Estado:** ⏳ Pendiente de diagnóstico  
+**Estado:** ✅ IMPLEMENTADO - Pendiente de verificación
 **Severity:** HIGH
 
 **Problema:**
@@ -24,112 +24,100 @@ Resolver los issues críticos restantes en el paquete .deb de blugon-lite relaci
 - El mensaje dice "Pantalla restaurada" pero es falso
 - Los colores cálidos persisten hasta el reinicio
 
-**Causa Probable:**
-- `blugon-lite --once` falla silenciosamente en el subprocess
-- Problema de permisos X11 o DISPLAY no disponible
+**Solución Implementada:**
+- Nueva función `restaurar_gamma()` en `tui/utils.py` con 3 métodos:
+  1. `blugon-lite --once` (preferido)
+  2. `xgamma -gamma 1.0` (fallback directo)
+  3. `xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0` (fallback alternativo)
+- Logging extensivo en `/tmp/blugon-tui-debug.log`
+- `detener_daemon()` actualizada para usar la nueva función y mostrar mensaje apropiado
 
-**Diagnóstico Requerido:**
-El usuario debe ejecutar en su PC real:
+**Verificación Requerida:**
 ```bash
-/usr/bin/blugon-lite --once && echo "OK" || echo "FALLÓ"
-xgamma -gamma 1.0 && echo "OK" || echo "FALLÓ"
-echo "DISPLAY=$DISPLAY"
-```
-
-**Solución Propuesta:**
-```python
-# Usar xgamma directamente si blugon-lite falla
-subprocess.run(['xgamma', '-gamma', '1.0'], capture_output=True)
+# 1. Iniciar daemon desde TUI (tecla 'i')
+# 2. Presionar 's' para detener
+# 3. Verificar que la pantalla se restaura a colores normales
+# 4. Revisar logs: cat /tmp/blugon-tui-debug.log | grep "restaurar_gamma"
 ```
 
 ---
 
 ### Issue #2: Restaurar gamma al desinstalar
-**Estado:** ⏳ Pendiente  
+**Estado:** ✅ IMPLEMENTADO - Pendiente de verificación
 **Severity:** HIGH
 
 **Problema:**
 - Al hacer `apt purge blugon-lite`, la pantalla queda con colores cálidos
 - El usuario debe reiniciar el sistema para ver colores normales
 
-**Causa Probable:**
-- Mismo problema que Issue #1
-- postrm no tiene acceso a DISPLAY
+**Solución Implementada:**
+- Función `restaurar_gamma()` en `postrm` con mismos 3 métodos
+- `export DISPLAY=:0` automático si no está definido
+- Logging en `/tmp/blugon-postrm-debug.log`
 
-**Solución Propuesta:**
+**Verificación Requerida:**
 ```bash
-# postrm - purge
-export DISPLAY=:0
-xgamma -gamma 1.0 2>/dev/null || true
+# 1. Instalar paquete: sudo apt install ./blugon-lite_1.0.0-lite-amd64.deb
+# 2. Iniciar daemon: blugon-lite --interval 120 &
+# 3. Desinstalar: sudo apt purge blugon-lite
+# 4. Verificar que la pantalla se restaura
+# 5. Revisar logs: cat /tmp/blugon-postrm-debug.log
 ```
 
 ---
 
 ### Issue #3: Autoinicio no se elimina al desinstalar
-**Estado:** ⏳ Pendiente  
+**Estado:** ✅ IMPLEMENTADO - Pendiente de verificación
 **Severity:** MEDIUM
 
 **Problema:**
 - El archivo `/etc/xdg/autostart/blugon-lite.desktop` persiste después de desinstalar
 
-**Causa Probable:**
-- postrm no tiene permisos o la ruta es incorrecta
-- El archivo se crea en `/etc/xdg/autostart/` pero no se elimina
+**Solución Implementada:**
+- `postrm` ahora elimina en `/etc/xdg/autostart/blugon-lite.desktop`
+- `postrm` elimina en `~/.config/autostart/blugon-lite.desktop` para cada usuario
+- Logging de cada operación de eliminación
 
 **Verificación Requerida:**
 ```bash
-# Después de desinstalar
-ls -la /etc/xdg/autostart/blugon-lite.desktop
-cat /tmp/blugon-postrm-debug.log
-```
-
-**Solución Propuesta:**
-```bash
-# postrm - purge
-rm -f /etc/xdg/autostart/blugon-lite.desktop
-rm -f ~/.config/autostart/blugon-lite.desktop
+# Después de desinstalar con purge:
+ls /etc/xdg/autostart/blugon-lite.desktop  # Debe decir "No existe"
+ls ~/.config/autostart/blugon-lite.desktop  # Debe decir "No existe"
+cat /tmp/blugon-postrm-debug.log | grep "Eliminado"
 ```
 
 ---
 
 ### Issue #4: Mejorar TUI (UX, validaciones)
-**Estado:** ⏳ Pendiente  
+**Estado:** ⏳ PENDIENTE
 **Severity:** LOW
 
 **Mejoras Propuestas:**
-1. Validar que el daemon existe antes de mostrar "Activo"
-2. Agregar confirmación antes de detener daemon
-3. Mostrar mensaje de error detallado si falla la restauración
-4. Agregar atajo de teclado para salir sin guardar (si aplica)
-5. Mejorar diseño del footer (2 filas puede ser mucho)
+1. ✅ Mensajes de error detallados si falla la restauración (IMPLEMENTADO)
+2. [ ] Validar que el daemon existe antes de mostrar "Activo" (ya existe)
+3. [ ] Agregar confirmación antes de detener daemon (opcional)
+4. [ ] Mejorar diseño del footer (reducir a 1 fila si es posible)
 
 ---
 
 ## Plan de Implementación
 
-### Fase 1: Diagnóstico (PENDIENTE)
-- [ ] Esperar salida de comandos de diagnóstico del usuario
-- [ ] Analizar logs de `/tmp/blugon-tui-debug.log`
-- [ ] Identificar causa exacta del fallo de gamma
+### Fase 1: Implementación ✅ COMPLETADA
+- [x] Implementar `restaurar_gamma()` en `tui/utils.py`
+- [x] Actualizar `detener_daemon()` en `tui/app.py`
+- [x] Mejorar `postrm` con función `restaurar_gamma()`
+- [x] Agregar limpieza de autoinicio en `postrm`
+- [x] Agregar logging extensivo
+- [x] Commit: `b28bc5b`
 
-### Fase 2: Solución Issue #1 (Gamma en TUI)
-- [ ] Probar `xgamma -gamma 1.0` como fallback
-- [ ] Actualizar `detener_daemon()` en `tui/app.py`
-- [ ] Testear en VM
-- [ ] Enviar paquete al usuario
+### Fase 2: Verificación ⏳ PENDIENTE
+- [ ] Probar Issue #1: TUI restaura gamma al detener daemon
+- [ ] Probar Issue #2: postrm restaura gamma al desinstalar
+- [ ] Probar Issue #3: autoinicio se elimina al desinstalar
+- [ ] Revisar logs de verificación
 
-### Fase 3: Solución Issue #2 (Gamma en postrm)
-- [ ] Agregar `export DISPLAY=:0` en postrm
-- [ ] Usar `xgamma` directamente
-- [ ] Testear desinstalación completa
-
-### Fase 4: Solución Issue #3 (Autoinicio)
-- [ ] Verificar ruta correcta del archivo .desktop
-- [ ] Agregar logging en postrm
-- [ ] Eliminar en ambas ubicaciones (/etc/xdg y ~/.config)
-
-### Fase 5: Mejoras TUI (Issue #4)
-- [ ] Implementar mejoras de UX priorizadas
+### Fase 3: Issue #4 (Mejoras TUI) ⏳ PENDIENTE
+- [ ] Implementar mejoras de UX restantes
 - [ ] Testear en VM
 - [ ] Documentar cambios
 
@@ -156,10 +144,33 @@ rm -f ~/.config/autostart/blugon-lite.desktop
 
 ---
 
-## Notas de Implementación
+## Próximos Pasos
 
-**IMPORTANTE:** Este track depende del diagnóstico del usuario. No se puede avanzar sin:
-1. La salida de los comandos de diagnóstico
-2. Confirmación de que `xgamma -gamma 1.0` funciona en su sistema
+**ACCIÓN REQUERIDA:** Ejecutar pruebas de verificación en tu PC real:
 
-**Próxima Acción:** Esperar feedback del usuario con los logs.
+1. **Instalar el nuevo paquete:**
+   ```bash
+   sudo apt install ./blugon-lite_1.0.0-lite-amd64.deb
+   ```
+
+2. **Probar Issue #1 (TUI):**
+   ```bash
+   blugon-lite-tui
+   # Presionar 'i' para iniciar daemon
+   # Esperar unos segundos
+   # Presionar 's' para detener
+   # ¿La pantalla se restaura a colores normales?
+   ```
+
+3. **Probar Issue #2 y #3 (Desinstalación):**
+   ```bash
+   sudo apt purge blugon-lite
+   # ¿La pantalla se restaura?
+   # Verificar: ls /etc/xdg/autostart/blugon-lite.desktop
+   ```
+
+4. **Enviar logs:**
+   ```bash
+   cat /tmp/blugon-tui-debug.log | grep -E "restaurar_gamma|xgamma|blugon-lite --once"
+   cat /tmp/blugon-postrm-debug.log
+   ```
