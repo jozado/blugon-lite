@@ -329,15 +329,39 @@ class BlugonLiteTUI:
         prev_label = prev_h[2] if prev_h else "N/A"
         temp_info = f"{temp_actual:.0f}K ({prev_label})"
 
-        # Calcular próximo horario con etiqueta
+        # Calcular próximo horario (el SIGUIENTE después del actual)
+        # Si next_h es el horario actual (misma hora), buscar el siguiente
         if next_h:
             next_mins = next_h[0]
-            if next_mins < current_time:
-                next_mins += 24 * 60
-            diff_minutes = next_mins - current_time
-            hours, mins = diff_minutes // 60, diff_minutes % 60
-            next_label = next_h[2] if next_h[2] else "Sin etiqueta"
-            next_info = f"{next_h[0]//60:02d}:{next_h[0]%60:02d} → {next_h[1]}K ({hours}h {mins}m) - {next_label}"
+            # Si ya estamos en este horario (o ya pasó), buscar el siguiente
+            if next_mins <= current_time:
+                # Buscar siguiente horario después del actual
+                found_current = False
+                for sched in self.schedules:
+                    sched_mins = sched['hour'] * 60 + sched['minute']
+                    if found_current and sched_mins > next_mins:
+                        next_h = (sched_mins, sched['temp'], sched.get('label', ''))
+                        break
+                    elif sched_mins == next_mins:
+                        found_current = True
+                else:
+                    # Si no hay más hoy, usar el primero del día siguiente
+                    if self.schedules:
+                        next_h = (self.schedules[0]['hour'] * 60 + self.schedules[0]['minute'],
+                                  self.schedules[0]['temp'],
+                                  self.schedules[0].get('label', ''))
+            
+            # Calcular tiempo restante
+            if next_h:
+                next_mins_calc = next_h[0]
+                if next_mins_calc < current_time:
+                    next_mins_calc += 24 * 60
+                diff_minutes = next_mins_calc - current_time
+                hours, mins = diff_minutes // 60, diff_minutes % 60
+                next_label = next_h[2] if next_h[2] else "Sin etiqueta"
+                next_info = f"{next_h[0]//60:02d}:{next_h[0]%60:02d} → {next_h[1]}K ({hours}h {mins}m) ({next_label})"
+            else:
+                next_info = "N/A"
         else:
             next_info = "N/A"
 
@@ -366,15 +390,39 @@ class BlugonLiteTUI:
         prev_label = prev_h[2] if prev_h else "N/A"
         temp_info = f"{temp_actual:.0f}K ({prev_label})"
 
-        # Calcular próximo horario con etiqueta
+        # Calcular próximo horario (el SIGUIENTE después del actual)
+        # Si next_h es el horario actual (misma hora), buscar el siguiente
         if next_h:
             next_mins = next_h[0]
-            if next_mins < current_time:
-                next_mins += 24 * 60
-            diff_minutes = next_mins - current_time
-            hours, mins = diff_minutes // 60, diff_minutes % 60
-            next_label = next_h[2] if next_h[2] else "Sin etiqueta"
-            next_info = f"{next_h[0]//60:02d}:{next_h[0]%60:02d} → {next_h[1]}K ({hours}h {mins}m) - {next_label}"
+            # Si ya estamos en este horario (o ya pasó), buscar el siguiente
+            if next_mins <= current_time:
+                # Buscar siguiente horario después del actual
+                found_current = False
+                for sched in self.schedules:
+                    sched_mins = sched['hour'] * 60 + sched['minute']
+                    if found_current and sched_mins > next_mins:
+                        next_h = (sched_mins, sched['temp'], sched.get('label', ''))
+                        break
+                    elif sched_mins == next_mins:
+                        found_current = True
+                else:
+                    # Si no hay más hoy, usar el primero del día siguiente
+                    if self.schedules:
+                        next_h = (self.schedules[0]['hour'] * 60 + self.schedules[0]['minute'],
+                                  self.schedules[0]['temp'],
+                                  self.schedules[0].get('label', ''))
+            
+            # Calcular tiempo restante
+            if next_h:
+                next_mins_calc = next_h[0]
+                if next_mins_calc < current_time:
+                    next_mins_calc += 24 * 60
+                diff_minutes = next_mins_calc - current_time
+                hours, mins = diff_minutes // 60, diff_minutes % 60
+                next_label = next_h[2] if next_h[2] else "Sin etiqueta"
+                next_info = f"{next_h[0]//60:02d}:{next_h[0]%60:02d} → {next_h[1]}K ({hours}h {mins}m) ({next_label})"
+            else:
+                next_info = "N/A"
         else:
             next_info = "N/A"
 
