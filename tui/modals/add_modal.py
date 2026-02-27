@@ -142,11 +142,11 @@ class AddScheduleModal:
         self.app.current_modal = None
         self.app.modal_open = False
         self.app.loop.widget = self.app.main_frame
-        self.app.loop.draw_screen()
         
         # Actualizar panel de información (hora, temperatura, próximo)
         self.app.update_info()
         
+        self.app.loop.draw_screen()
         self.app.save_config()
     
     def cancel(self):
