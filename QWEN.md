@@ -59,13 +59,13 @@
 
 ---
 
-## Documentación de Hallazgos y Soluciones
+## Revision y Documentación de Hallazgos y Soluciones
 
-**Principio:** Cuando se encuentren soluciones a problemas que tomen tiempo resolver, o soluciones simples a problemas que puedan repetirse en el futuro, **documentar inmediatamente** en `HALLAZGOS_Y_SOLUCIONES.md`.
+**Principio:** Cuando se encuentren problemas dificiles de resolver en el codigo revisar en el archivo `HALLAZGOS_Y_SOLUCIONES.md` para verificar si ya se han solucionado antes problemas similares en el proyecto. Cuando se encuentren soluciones a problemas que tomen tiempo resolver, o soluciones simples a problemas que puedan repetirse en el futuro, **documentar inmediatamente** en `HALLAZGOS_Y_SOLUCIONES.md`.
 
 ### Cuándo Actualizar HALLAZGOS_Y_SOLUCIONES.md
 
-1. **Problemas que tomaron >30 minutos resolver** - Documentar causa raíz y solución
+1. **Problemas que tomaron >15 minutos resolver** - Documentar causa raíz y solución
 2. **Soluciones no obvias** - Workarounds, hacks, o enfoques creativos
 3. **Comportamientos del sistema** - Quirks de X11, permisos, servicios, etc.
 4. **Errores recurrentes** - Problemas que pueden volver a aparecer
@@ -106,3 +106,58 @@ Comandos o snippets útiles para resolver rápidamente si vuelve a ocurrir
 **Ejemplo real:** Problema "Gamma no se restaura" → Causa: xrandr vs xgamma → Solución: Usar xrandr --output --gamma
 
 **Aplicación:** Esta práctica aplica a todo el proyecto blugon-lite y proyectos futuros.
+
+---
+
+## Validación de Lógica con Scripts de Prueba
+
+**Principio:** Antes de modificar código crítico, crear script de prueba aislado para validar la lógica.
+
+### Cuándo Usar Este Enfoque
+
+1. **Algoritmos nuevos** - Lógica de cálculo, interpolación, sincronización
+2. **Cambios críticos** - Modificaciones que afectan el core del sistema
+3. **Fórmulas matemáticas** - Cálculos de tiempo, temperatura, interpolación
+4. **Lógica de estado** - Máquinas de estado, transiciones, condiciones
+5. **Optimizaciones** - Cambios que mejoran performance pero deben validar correctness
+
+### Flujo Recomendado
+
+```
+1. 💡 Idea: Nueva lógica o algoritmo
+2. 🧪 Prototipo: Script aislado (test_*.py)
+3. ✅ Validación: Probar con casos reales
+4. 🔧 Ajuste: Corregir errores en el prototipo
+5. ✅ Re-validación: Confirmar que funciona
+6. 🚀 Implementación: Portar al código real
+7. 📊 Validación final: Teoría = Realidad
+```
+
+### Beneficios
+
+| Ventaja | Resultado |
+|---------|-----------|
+| **Feedback inmediato** | Problemas detectados en segundos |
+| **Debugging simple** | Sin dependencias complejas |
+| **Iteración rápida** | Cambios y pruebas al toque |
+| **Cero riesgo** | Si falla, no afecta el producto |
+| **Confianza total** | Implementación ya validada |
+
+### Ejemplo Real
+
+**Problema:** Sincronizar daemon a múltiplos de 5 minutos
+
+**Enfoque:**
+```bash
+# 1. Crear script de prueba
+python3 test_sync_5min.py
+
+# 2. Validar lógica (detectamos error: 23:18→23:21 en vez de 23:20)
+# 3. Corregir fórmula en el script
+# 4. Re-validar: ¡funciona!
+# 5. Implementar en blugon-lite.py
+```
+
+**Resultado:** Error detectado y corregido en 5 minutos, sin tocar el daemon real.
+
+**Aplicación:** Este enfoque aplica a todo desarrollo de lógica compleja en el proyecto.
