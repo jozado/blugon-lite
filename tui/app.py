@@ -361,19 +361,20 @@ class BlugonLiteTUI:
         temp_actual, prev_h, next_h = calcular_temperatura_interpolada(
             self.schedules, now.hour, now.minute
         )
-        
+
         # Obtener etiqueta del horario anterior
         prev_label = prev_h[2] if prev_h else "N/A"
         temp_info = f"{temp_actual:.0f}K ({prev_label})"
 
-        # Calcular próximo horario
+        # Calcular próximo horario con etiqueta
         if next_h:
             next_mins = next_h[0]
             if next_mins < current_time:
                 next_mins += 24 * 60
             diff_minutes = next_mins - current_time
             hours, mins = diff_minutes // 60, diff_minutes % 60
-            next_info = f"{next_h[0]//60:02d}:{next_h[0]%60:02d} → {next_h[1]}K ({hours}h {mins}m)"
+            next_label = next_h[2] if next_h[2] else "Sin etiqueta"
+            next_info = f"{next_h[0]//60:02d}:{next_h[0]%60:02d} → {next_h[1]}K ({hours}h {mins}m) - {next_label}"
         else:
             next_info = "N/A"
 
