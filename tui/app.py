@@ -128,8 +128,40 @@ class BlugonLiteTUI:
             palette=PALETTE_DARK,
             unhandled_input=self.handle_input,
             input_filter=self.input_handler.create_input_filter(),
-            handle_mouse=False
+            handle_mouse=False,
+            pop_ups=True
         )
+        
+        # Configurar actualización automática del panel cada 5 minutos (sincronizado con el daemon)
+        self.loop.set_alarm_in(self._calcular_segundos_proximo_5min(), self.auto_update_info)
+
+    def _calcular_segundos_proximo_5min(self):
+        """Calcular segundos hasta el próximo múltiplo de 5 minutos."""
+        from time import localtime
+        now = localtime()
+        minuto_actual = now.tm_min
+        segundo_actual = now.tm_sec
+        
+        # Calcular minutos restantes hasta próximo múltiplo de 5
+        minutos_restantes = (5 - (minuto_actual % 5)) % 5
+        
+        # Si estamos en múltiplo de 5 exacto (segundos = 0)
+        if minutos_restantes == 0 and segundo_actual == 0:
+            return 300  # 5 minutos
+        
+        # Calcular segundos totales
+        if minutos_restantes == 0:
+            segundos_espera = 300 - segundo_actual
+        else:
+            segundos_espera = minutos_restantes * 60 - segundo_actual
+        
+        return max(segundos_espera, 300) if segundos_espera <= 0 else segundos_espera
+
+    def auto_update_info(self, loop, user_data):
+        """Actualizar automáticamente el panel de información (sincronizado con daemon)."""
+        self.update_info()
+        # Programar próxima actualización en 5 minutos (300 segundos)
+        self.loop.set_alarm_in(300, self.auto_update_info)
 
     def _create_header(self):
         """Crear header con estado del daemon."""
@@ -184,6 +216,10 @@ class BlugonLiteTUI:
             self.daemon_active = is_daemon_running()
             logging.debug(f"Después de iniciar, daemon_active = {self.daemon_active}")
             self.refresh_status()
+            
+            # Actualizar panel de información (hora y temperatura)
+            self.update_info()
+            
             if self.daemon_active:
                 self.show_message("Daemon iniciado", 'success')
                 logging.info("Mensaje: Daemon iniciado")
@@ -238,11 +274,15 @@ class BlugonLiteTUI:
         """Refrescar el estado del daemon."""
         import logging
         logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
-        
+
         logging.debug("refrescar_estado() llamado")
         self.daemon_active = is_daemon_running()
         logging.debug(f"daemon_active = {self.daemon_active}")
         self.refresh_status()
+        
+        # Actualizar panel de información (hora y temperatura)
+        self.update_info()
+        
         estado = "Activo" if self.daemon_active else "Inactivo"
         self.show_message(f"Estado actualizado: Daemon {estado}", 'info')
         logging.info(f"Mensaje: Estado actualizado: Daemon {estado}")
