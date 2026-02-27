@@ -44,11 +44,12 @@ This file tracks all major tracks for the project. Each track has its own detail
   2. ~~Restaurar gamma al desinstalar paquete~~ → **SUBTRACK: [gamma_restore_fails_20260226](./tracks/gamma_restore_fails_20260226/)** 🔴
   3. ~~Eliminar autoinicio correctamente al desinstalar~~ → ✅ COMPLETADO
   4. ~~Eliminar directorios residuales al desinstalar~~ → **SUBTRACK: [postrm_cleanup_fails_20260226](./tracks/postrm_cleanup_fails_20260226/)** 🟡
-  5. Mejorar TUI (UX, validaciones) - PENDIENTE
+  5. Mejorar TUI (UX, validaciones) - EN PROGRESO
 
   **Archivo de contexto:** `DEBUG_SESSION.md` con toda la información de depuración.
 
   **SUBTRACKS:**
   - 🔴 [gamma_restore_fails_20260226](./tracks/gamma_restore_fails_20260226/) - Gamma no se restaura (CRITICAL)
   - 🟡 [postrm_cleanup_fails_20260226](./tracks/postrm_cleanup_fails_20260226/) - postrm no elimina directorios (MEDIUM)
+  - ⏳ [daemon_sync_5min_20260226](./tracks/daemon_sync_5min_20260226/) - Sincronizar daemon a múltiplos de 5 min (MEDIUM)
 
