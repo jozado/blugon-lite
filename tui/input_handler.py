@@ -272,7 +272,7 @@ class InputHandler:
                 changed = True
             elif field == 2:  # Temperatura
                 new_temp = self.app.edit_temp_val + direction * 100
-                self.app.edit_temp_val = max(1000, min(20000, new_temp))
+                self.app.edit_temp_val = max(1000, min(6500, new_temp))
                 changed = True
         else:
             if field == 0:  # Hora
@@ -283,9 +283,9 @@ class InputHandler:
                 changed = True
             elif field == 2:  # Temperatura
                 new_temp = self.app.add_temp + direction * 100
-                self.app.add_temp = max(1000, min(20000, new_temp))
+                self.app.add_temp = max(1000, min(6500, new_temp))
                 changed = True
-        
+
         return changed
     
     def _handle_enter(self):

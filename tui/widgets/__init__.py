@@ -40,28 +40,40 @@ class ColorPreview(urwid.WidgetWrap):
     def _create_preview(self):
         """Crear barra de vista previa de color ASCII."""
         r, g, b = temp_to_rgb(self.temp)
-        
-        # Calcular posición en el rango 1000K-20000K
-        # 1000K = más cálido (barra llena)
-        # 20000K = más frío (barra vacía)
+
+        # Rango útil: 1000K (máxima calidez) a 6500K (luz día normal)
+        # 6500K es el estándar D65 de luz día
         temp_min = 1000
-        temp_max = 20000
-        temp_range = temp_max - temp_min
-        
-        # Porcentaje de "calidez" (inverso a temperatura)
+        temp_max = 6500
+        temp_range = temp_max - temp_min  # 5500
+
+        # Calcular "Azul reducido"
+        # 1000K = 100% (máxima reducción de azul)
+        # 6500K = 0% (sin reducción, luz día normal)
         warmth_percent = ((temp_max - self.temp) / temp_range) * 100
         warmth_percent = max(0, min(100, warmth_percent))  # Clamp 0-100
-        
-        # Determinar descripción según temperatura
+
+        # Determinar descripción y mensaje según temperatura
         if self.temp >= 6500:
-            desc = "frío"
-            attr = 'preview_cool'
-        elif self.temp >= 4500:
             desc = "neutro"
             attr = 'preview_neutral'
-        else:
+            message = "Luz día normal"
+        elif self.temp >= 4500:
+            desc = "poco cálido"
+            attr = 'preview_neutral'
+            message = "Poco cálido"
+        elif self.temp >= 3000:
             desc = "cálido"
             attr = 'preview_warm'
+            message = "Cálido"
+        elif self.temp >= 2000:
+            desc = "muy cálido"
+            attr = 'preview_warm'
+            message = "Muy cálido"
+        else:
+            desc = "máxima calidez"
+            attr = 'preview_warm'
+            message = "Máxima Calidez"
 
         # Barra de color ASCII de 30 caracteres
         bar_width = 30
@@ -76,7 +88,7 @@ class ColorPreview(urwid.WidgetWrap):
                     ('pack', urwid.AttrMap(urwid.Text(bar), attr)),
                     ('pack', urwid.Text(f"  ({desc})")),
                 ]),
-                urwid.Text(f"Azul reducido: {warmth_percent:.0f}%"),
+                urwid.Text(f"Azul reducido: {warmth_percent:.0f}% - {message}"),
             ]),
             'default'
         )

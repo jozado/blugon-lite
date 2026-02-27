@@ -29,4 +29,4 @@ DEFAULT_CONFIG = """# Default blugon-lite configuration
 # Límites de configuración
 HOUR_MIN, HOUR_MAX = 0, 23
 MINUTE_MIN, MINUTE_MAX = 0, 59
-TEMP_MIN, TEMP_MAX = 1000, 20000
+TEMP_MIN, TEMP_MAX = 1000, 6500  # 6500K = luz día normal (D65)
