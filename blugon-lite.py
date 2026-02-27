@@ -32,6 +32,47 @@ NORMAL_RED, NORMAL_GREEN, NORMAL_BLUE = 1.0, 1.0, 1.0
 BACKEND_LIST = ['xgamma', 'scg']
 
 
+def calcular_proximo_intervalo():
+    """
+    Calcular segundos hasta el próximo múltiplo de 5 minutos.
+    
+    Sincroniza el daemon para que verifique exactamente a las XX:00, XX:05, XX:10, etc.
+    Esto permite que los cambios programados en el TUI (que usa pasos de 5 min)
+    se apliquen en el momento exacto.
+    
+    Retorna:
+        int: Segundos a esperar hasta el próximo múltiplo de 5 minutos.
+    
+    Ejemplos:
+        20:00:00 → 300s (próximo: 20:05:00)
+        20:03:45 → 75s (próximo: 20:05:00)
+        20:05:00 → 300s (próximo: 20:10:00)
+        20:07:30 → 150s (próximo: 20:10:00)
+        20:18:47 → 73s (próximo: 20:20:00)
+    """
+    now = time.localtime()
+    minuto_actual = now.tm_min
+    segundo_actual = now.tm_sec
+    
+    # Calcular minutos restantes hasta próximo múltiplo de 5
+    minutos_restantes = (5 - (minuto_actual % 5)) % 5
+    
+    # Si estamos en múltiplo de 5 exacto (segundos = 0)
+    if minutos_restantes == 0 and segundo_actual == 0:
+        return 300  # Esperar 5 minutos completos
+    
+    # Si estamos en múltiplo de 5 pero con segundos > 0
+    # Ej: 23:05:30 → esperar hasta 23:10:00
+    if minutos_restantes == 0:
+        segundos_espera = 300 - segundo_actual
+    else:
+        # Ej: 23:18:47 → 2 min * 60 - 47 seg = 73 seg (llega a 23:20:00)
+        segundos_espera = minutos_restantes * 60 - segundo_actual
+    
+    # Si el cálculo da 0 o negativo (caso borde), usar 300
+    return max(segundos_espera, 300) if segundos_espera <= 0 else segundos_espera
+
+
 def temp_to_gamma(temp):
     """Transform temperature in Kelvin to Gamma values (0-1).
     Algorithm by Tanner Helland: http://www.tannerhelland.com/4435/"""
@@ -248,13 +289,21 @@ def main():
         logging.info("Gamma aplicado exitosamente")
         return
 
-    # Main loop
-    logging.info(f"Iniciando bucle principal (interval={INTERVAL}s)")
+    # Main loop - Sincronizado a múltiplos de 5 minutos
+    logging.info("Iniciando bucle principal (sincronizado a múltiplos de 5 min)")
     restart_count = 0
     while True:
         try:
             apply_gamma()
-            time.sleep(INTERVAL)
+            
+            # Calcular intervalo hasta próximo múltiplo de 5 minutos
+            # Esto asegura que los cambios se apliquen exactamente a las XX:00, XX:05, etc.
+            intervalo = calcular_proximo_intervalo()
+            proximo_ts = time.time() + intervalo
+            proximo_str = time.strftime("%H:%M:%S", time.localtime(proximo_ts))
+            
+            logging.info(f"Próxima verificación: {proximo_str} (en {intervalo}s)")
+            time.sleep(intervalo)
         except Exception as e:
             restart_count += 1
             logging.error(f"Error en iteración {restart_count}: {e}")
