@@ -55,6 +55,65 @@ def get_label_for_time(hour, minute):
         return "Madrugada"
 
 
+def calcular_temperatura_interpolada(schedules, current_hour, current_minute):
+    """
+    Calcular temperatura interpolada actual basada en los horarios configurados.
+    
+    Args:
+        schedules: Lista de horarios con 'hour', 'minute', 'temp'
+        current_hour: Hora actual (0-23)
+        current_minute: Minuto actual (0-59)
+    
+    Retorna:
+        tuple: (temperatura_interpolada, horario_anterior, horario_siguiente)
+    """
+    current_time = current_hour * 60 + current_minute
+    
+    # Convertir horarios a minutos y ordenar
+    horarios = []
+    for s in schedules:
+        mins = s['hour'] * 60 + s['minute']
+        horarios.append((mins, s['temp'], s.get('label', '')))
+    horarios.sort()
+    
+    # Encontrar horarios adyacentes
+    prev_h = None
+    next_h = None
+    
+    for mins, temp, label in horarios:
+        if mins <= current_time:
+            prev_h = (mins, temp, label)
+        if mins >= current_time and next_h is None:
+            next_h = (mins, temp, label)
+    
+    # Si no hay siguiente, usar el primero del día siguiente (cruza medianoche)
+    if next_h is None and prev_h is not None:
+        next_h = horarios[0]
+    elif prev_h is None and next_h is not None:
+        prev_h = horarios[-1]
+    elif prev_h is None and next_h is None:
+        return 6500, None, None  # Default si no hay horarios
+    
+    # Calcular interpolación
+    prev_mins, prev_temp, _ = prev_h
+    next_mins, next_temp, _ = next_h
+    
+    # Ajustar si cruza medianoche
+    if next_mins < prev_mins:
+        next_mins += 24 * 60
+    
+    # Calcular factor de interpolación
+    if next_mins == prev_mins:
+        factor = 0
+    else:
+        factor = (current_time - prev_mins) / (next_mins - prev_mins)
+    
+    # Interpolar temperatura
+    temp_actual = prev_temp + factor * (next_temp - prev_temp)
+    
+    return temp_actual, prev_h, next_h
+
+
 def read_gamma_file(filepath):
     """Leer configuración gamma desde archivo.
 

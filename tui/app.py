@@ -18,6 +18,7 @@ from .utils import (
     get_label_for_time,
     load_theme,
     restaurar_gamma,
+    calcular_temperatura_interpolada,
 )
 from .widgets import ColorPreview, ScheduleItem
 from .modals import ModalOverlay, EditScheduleModal, AddScheduleModal, DeleteConfirmModal, ThemeSelectorModal
@@ -251,28 +252,23 @@ class BlugonLiteTUI:
         now = datetime.now()
         current_time = now.hour * 60 + now.minute
 
-        current_sched = None
-        next_sched = None
+        # Calcular temperatura interpolada actual
+        temp_actual, prev_h, next_h = calcular_temperatura_interpolada(
+            self.schedules, now.hour, now.minute
+        )
+        
+        # Obtener etiqueta del horario anterior
+        prev_label = prev_h[2] if prev_h else "N/A"
+        temp_info = f"{temp_actual:.0f}K ({prev_label})"
 
-        for sched in self.schedules:
-            sched_time = sched['hour'] * 60 + sched['minute']
-            if sched_time <= current_time:
-                current_sched = sched
-            elif next_sched is None:
-                next_sched = sched
-
-        if next_sched is None and self.schedules:
-            next_sched = self.schedules[0]
-
-        temp_info = f"{current_sched['temp_str']} ({current_sched['label']})" if current_sched else "N/A"
-
-        if next_sched:
-            next_time = next_sched['hour'] * 60 + next_sched['minute']
-            if next_time < current_time:
-                next_time += 24 * 60
-            diff_minutes = next_time - current_time
+        # Calcular próximo horario
+        if next_h:
+            next_mins = next_h[0]
+            if next_mins < current_time:
+                next_mins += 24 * 60
+            diff_minutes = next_mins - current_time
             hours, mins = diff_minutes // 60, diff_minutes % 60
-            next_info = f"{next_sched['time_str']} → {next_sched['temp_str']} ({hours}h {mins}m)"
+            next_info = f"{next_h[0]//60:02d}:{next_h[0]%60:02d} → {next_h[1]}K ({hours}h {mins}m)"
         else:
             next_info = "N/A"
 
@@ -292,28 +288,23 @@ class BlugonLiteTUI:
         now = datetime.now()
         current_time = now.hour * 60 + now.minute
 
-        current_sched = None
-        next_sched = None
+        # Calcular temperatura interpolada actual
+        temp_actual, prev_h, next_h = calcular_temperatura_interpolada(
+            self.schedules, now.hour, now.minute
+        )
+        
+        # Obtener etiqueta del horario anterior
+        prev_label = prev_h[2] if prev_h else "N/A"
+        temp_info = f"{temp_actual:.0f}K ({prev_label})"
 
-        for sched in self.schedules:
-            sched_time = sched['hour'] * 60 + sched['minute']
-            if sched_time <= current_time:
-                current_sched = sched
-            elif next_sched is None:
-                next_sched = sched
-
-        if next_sched is None and self.schedules:
-            next_sched = self.schedules[0]
-
-        temp_info = f"{current_sched['temp_str']} ({current_sched['label']})" if current_sched else "N/A"
-
-        if next_sched:
-            next_time = next_sched['hour'] * 60 + next_sched['minute']
-            if next_time < current_time:
-                next_time += 24 * 60
-            diff_minutes = next_time - current_time
+        # Calcular próximo horario
+        if next_h:
+            next_mins = next_h[0]
+            if next_mins < current_time:
+                next_mins += 24 * 60
+            diff_minutes = next_mins - current_time
             hours, mins = diff_minutes // 60, diff_minutes % 60
-            next_info = f"{next_sched['time_str']} → {next_sched['temp_str']} ({hours}h {mins}m)"
+            next_info = f"{next_h[0]//60:02d}:{next_h[0]%60:02d} → {next_h[1]}K ({hours}h {mins}m)"
         else:
             next_info = "N/A"
 
