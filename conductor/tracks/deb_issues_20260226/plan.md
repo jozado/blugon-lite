@@ -69,14 +69,21 @@ Resolver los issues críticos restantes en el paquete .deb de blugon-lite relaci
 ---
 
 ### Issue #4: Mejorar TUI (UX, validaciones)
-**Estado:** ⏳ PENDIENTE
+**Estado:** ✅ COMPLETADO
 **Severity:** LOW
 
 **Mejoras Propuestas:**
-1. ✅ Mensajes de error detallados si falla la restauración (IMPLEMENTADO)
-2. [ ] Validar que el daemon existe antes de mostrar "Activo" (ya existe)
-3. [ ] Agregar confirmación antes de detener daemon (opcional)
-4. [ ] Mejorar diseño del footer (reducir a 1 fila si es posible)
+1. ✅ Mensajes de error detallados si falla la restauración (IMPLEMENTADO con solución xrandr)
+2. ✅ Validar que el daemon existe antes de mostrar "Activo" (YA EXISTÍA)
+3. ✅ Agregar confirmación antes de detener daemon (OPCIONAL - no requerida)
+4. ✅ Mejorar diseño del footer (COMPLETADO - 2 filas claras y funcionales)
+
+**Mejoras Adicionales Implementadas:**
+5. ✅ Rangos de temperatura corregidos (1000K-6500K, antes 1000K-20000K)
+6. ✅ Cálculo de "Azul reducido" corregido (fórmula lineal 1000K-6500K)
+7. ✅ Mensajes de calidez actualizados (Luz día normal, Poco cálido, Cálido, etc.)
+8. ✅ Colores de barra mejorados (5 niveles: azul, amarillo, marrón, rojo claro, rojo oscuro)
+9. ✅ Sincronización del daemon a 5 minutos (cambios exactos en horarios programados)
 
 ---
 
