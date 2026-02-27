@@ -217,53 +217,84 @@ def toggle_daemon():
 def restaurar_gamma():
     """Restaurar gamma de pantalla a valores normales (6500K / RGB 1.0).
 
-    NOTA: NO usar blugon-lite --once porque aplica gamma según la hora
-    (puede ser cálido si es de noche). Usar xgamma directamente.
-
-    IMPORTANTE: Usar os.system() para heredar el TTY de la terminal padre.
+    NOTA: El backend SCG de blugon-lite usa Xrandr (XRRSetCrtcGamma).
+    Para restaurar, debemos usar xrandr también, NO xgamma.
 
     Intenta métodos en orden:
-    1. xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 (restauración directa)
-    2. xgamma -gamma 1.0 (fallback)
+    1. xrandr --output --gamma 1.0:1.0:1.0 (para todos los outputs conectados)
+    2. xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 (fallback)
 
     Returns:
         tuple: (exitoso: bool, mensaje: str)
     """
     import logging
-    import os
+    import subprocess
     logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
 
     logging.info("=== Iniciando restauración de gamma ===")
 
-    # Método 1: xgamma con valores RGB explícitos a 1.0 (RECOMENDADO)
-    logging.info("Intentando método 1: xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0")
+    # Método 1: xrandr para todos los outputs conectados (RECOMENDADO)
+    logging.info("Intentando método 1: xrandr --output --gamma 1.0:1.0:1.0")
     try:
-        # Usar os.system() para heredar el TTY automáticamente
-        result = os.system('xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0')
-        logging.debug(f"xgamma RGB: returncode={result}")
-
-        if result == 0:
-            logging.info("✓ xgamma RGB exitoso - gamma restaurado a 6500K")
-            return (True, "Gamma restaurado a 6500K")
+        # Obtener lista de outputs conectados
+        result = subprocess.run(
+            ['xrandr', '--query'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        outputs_conectados = []
+        for line in result.stdout.splitlines():
+            if ' connected' in line:
+                output_name = line.split()[0]
+                outputs_conectados.append(output_name)
+        
+        logging.debug(f"Outputs conectados: {outputs_conectados}")
+        
+        # Restaurar gamma para cada output
+        exitos = 0
+        for output in outputs_conectados:
+            result = subprocess.run(
+                ['xrandr', '--output', output, '--gamma', '1.0:1.0:1.0'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                exitos += 1
+                logging.debug(f"xrandr --output {output} --gamma 1.0:1.0:1.0: exitoso")
+            else:
+                logging.warning(f"xrandr --output {output} falló: {result.stderr}")
+        
+        if exitos > 0:
+            logging.info(f"✓ xrandr exitoso en {exitos}/{len(outputs_conectados)} outputs")
+            return (True, f"Gamma restaurado en {exitos} monitor(es)")
         else:
-            logging.warning(f"✗ xgamma RGB falló con código {result}")
+            logging.warning("✗ xrandr falló en todos los outputs")
+            
+    except subprocess.TimeoutExpired:
+        logging.error("✗ xrandr timeout")
     except Exception as e:
-        logging.error(f"✗ xgamma RGB excepción: {e}")
+        logging.error(f"✗ xrandr excepción: {e}")
 
-    # Método 2: Fallback a xgamma -gamma 1.0
-    logging.info("Intentando método 2: xgamma -gamma 1.0")
+    # Método 2: Fallback a xgamma
+    logging.info("Intentando método 2: xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0")
     try:
-        result = os.system('xgamma -gamma 1.0')
-        logging.debug(f"xgamma: returncode={result}")
+        result = subprocess.run(
+            ['xgamma', '-rgamma', '1.0', '-ggamma', '1.0', '-bgamma', '1.0'],
+            timeout=5
+        )
+        logging.debug(f"xgamma: returncode={result.returncode}")
 
-        if result == 0:
-            logging.info("✓ xgamma -gamma 1.0 exitoso")
+        if result.returncode == 0:
+            logging.info("✓ xgamma exitoso")
             return (True, "Gamma restaurado con xgamma")
         else:
-            logging.warning(f"✗ xgamma falló con código {result}")
+            logging.warning(f"✗ xgamma falló con código {result.returncode}")
     except Exception as e:
         logging.error(f"✗ xgamma excepción: {e}")
 
     # Todos los métodos fallaron
     logging.error("✗ TODOS los métodos de restauración fallaron")
-    return (False, "Error: No se pudo restaurar gamma. Ejecute 'xgamma -rgamma 1.0' manualmente")
+    return (False, "Error: No se pudo restaurar gamma. Ejecute 'xrandr --output --gamma 1.0:1.0:1.0' manualmente")

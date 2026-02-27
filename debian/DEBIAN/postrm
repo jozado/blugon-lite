@@ -21,21 +21,59 @@ restaurar_gamma() {
     fi
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Usuario X11: ${XUSER:-'no detectado'}" >> "$LOGFILE"
 
-    # Método 1: xgamma con valores RGB explícitos a 1.0 (RECOMENDADO)
-    # NOTA: NO usar blugon-lite --once porque aplica gamma según la hora
+    # Método 1: xrandr para todos los outputs (RECOMENDADO - backend SCG usa Xrandr)
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando xrandr --output --gamma 1.0:1.0:1.0..." >> "$LOGFILE"
+    
+    # Obtener outputs conectados
+    OUTPUTS=$(xrandr --query 2>/dev/null | grep " connected" | cut -d" " -f1)
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Outputs detectados: $OUTPUTS" >> "$LOGFILE"
+    
+    if [ -n "$OUTPUTS" ]; then
+        exitos=0
+        total=0
+        for output in $OUTPUTS; do
+            total=$((total + 1))
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Restaurando output: $output" >> "$LOGFILE"
+            if [ -n "$XUSER" ] && [ "$XUSER" != "root" ]; then
+                if su "$XUSER" -c "xrandr --output $output --gamma 1.0:1.0:1.0" >> "$LOGFILE" 2>&1; then
+                    exitos=$((exitos + 1))
+                    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xrandr --output $output exitoso" >> "$LOGFILE"
+                else
+                    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ xrandr --output $output falló" >> "$LOGFILE"
+                fi
+            else
+                if xrandr --output $output --gamma 1.0:1.0:1.0 >> "$LOGFILE" 2>&1; then
+                    exitos=$((exitos + 1))
+                    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xrandr --output $output exitoso" >> "$LOGFILE"
+                else
+                    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ xrandr --output $output falló" >> "$LOGFILE"
+                fi
+            fi
+        done
+        
+        if [ $exitos -gt 0 ]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xrandr exitoso en $exitos/$total outputs" >> "$LOGFILE"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Gamma restaurado exitosamente" >> "$LOGFILE"
+            return 0
+        else
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ xrandr falló en todos los outputs" >> "$LOGFILE"
+        fi
+    else
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ No se detectaron outputs con xrandr" >> "$LOGFILE"
+    fi
+
+    # Método 2: Fallback a xgamma
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0..." >> "$LOGFILE"
     if command -v xgamma > /dev/null 2>&1; then
-        # Ejecutar como el usuario de la sesión X11 si está disponible
         if [ -n "$XUSER" ] && [ "$XUSER" != "root" ]; then
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] Ejecutando como usuario: $XUSER" >> "$LOGFILE"
             if su "$XUSER" -c "xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0" >> "$LOGFILE" 2>&1; then
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xgamma RGB exitoso - gamma restaurado a 6500K" >> "$LOGFILE"
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xgamma RGB exitoso" >> "$LOGFILE"
                 return 0
             else
                 echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ xgamma RGB falló" >> "$LOGFILE"
             fi
         else
-            # Sin usuario disponible, intentar directamente
             if xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0 >> "$LOGFILE" 2>&1; then
                 echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xgamma RGB exitoso" >> "$LOGFILE"
                 return 0
@@ -45,24 +83,6 @@ restaurar_gamma() {
         fi
     else
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] xgamma no encontrado" >> "$LOGFILE"
-    fi
-
-    # Método 2: Fallback a xgamma -gamma 1.0
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Intentando xgamma -gamma 1.0..." >> "$LOGFILE"
-    if [ -n "$XUSER" ] && [ "$XUSER" != "root" ]; then
-        if su "$XUSER" -c "xgamma -gamma 1.0" >> "$LOGFILE" 2>&1; then
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xgamma -gamma 1.0 exitoso" >> "$LOGFILE"
-            return 0
-        else
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ xgamma -gamma 1.0 falló" >> "$LOGFILE"
-        fi
-    else
-        if xgamma -gamma 1.0 >> "$LOGFILE" 2>&1; then
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✓ xgamma -gamma 1.0 exitoso" >> "$LOGFILE"
-            return 0
-        else
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ xgamma -gamma 1.0 falló" >> "$LOGFILE"
-        fi
     fi
 
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✗ TODOS los métodos fallaron" >> "$LOGFILE"
