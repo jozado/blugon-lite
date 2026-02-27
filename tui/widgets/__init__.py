@@ -53,26 +53,27 @@ class ColorPreview(urwid.WidgetWrap):
         warmth_percent = ((temp_max - self.temp) / temp_range) * 100
         warmth_percent = max(0, min(100, warmth_percent))  # Clamp 0-100
 
-        # Determinar descripción y mensaje según temperatura
-        if self.temp >= 6500:
-            desc = "neutro"
-            attr = 'preview_neutral'
+        # Determinar mensaje y color según temperatura
+        # Rangos basados en la tabla: 6500K=Neutro, 4500K=Poco cálido, 3000K=Cálido, 2000K=Muy cálido, 1000K=Máxima Calidez
+        if self.temp > 4500:
+            # 4501K - 6500K: Luz día normal (azul/frío)
+            attr = 'preview_cool'
             message = "Luz día normal"
-        elif self.temp >= 4500:
-            desc = "poco cálido"
+        elif self.temp > 3000:
+            # 3001K - 4500K: Poco cálido (amarillo)
             attr = 'preview_neutral'
             message = "Poco cálido"
-        elif self.temp >= 3000:
-            desc = "cálido"
+        elif self.temp > 2000:
+            # 2001K - 3000K: Cálido (marrón/naranja)
             attr = 'preview_warm'
             message = "Cálido"
-        elif self.temp >= 2000:
-            desc = "muy cálido"
-            attr = 'preview_warm'
+        elif self.temp > 1000:
+            # 1001K - 2000K: Muy cálido (rojo claro)
+            attr = 'preview_very_warm'
             message = "Muy cálido"
         else:
-            desc = "máxima calidez"
-            attr = 'preview_warm'
+            # 1000K: Máxima Calidez (rojo oscuro)
+            attr = 'preview_extreme_warm'
             message = "Máxima Calidez"
 
         # Barra de color ASCII de 30 caracteres
@@ -86,7 +87,6 @@ class ColorPreview(urwid.WidgetWrap):
                 urwid.Columns([
                     ('pack', urwid.Text(f"Color: ")),
                     ('pack', urwid.AttrMap(urwid.Text(bar), attr)),
-                    ('pack', urwid.Text(f"  ({desc})")),
                 ]),
                 urwid.Text(f"Azul reducido: {warmth_percent:.0f}% - {message}"),
             ]),

@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=blugon-lite TUI
+Name=Blugon-Lite
 Comment=Blue Light Filter - Configurar horarios y temperatura de pantalla
 Exec=blugon-lite-tui
 Terminal=true
@@ -8,5 +8,4 @@ Categories=Utility;Settings;HardwareSettings;
 Icon=blugon-lite
 Keywords=blue light;filter;screen;temperature;night;
 StartupNotify=false
-NoDisplay=false
 StartupWMClass=blugon-lite-tui

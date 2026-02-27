@@ -23,9 +23,11 @@ PALETTE_DARK = [
     ('button', 'black', 'light gray'),
     ('button_selected', 'white', 'dark blue'),
     ('dialog', 'white', 'dark blue'),
-    ('preview_warm', 'yellow', 'default'),
-    ('preview_cool', 'light blue', 'default'),
-    ('preview_neutral', 'light gray', 'default'),
+    ('preview_cool', 'light blue', 'default'),       # 6500K - Luz día normal
+    ('preview_neutral', 'yellow', 'default'),        # 4500K - Poco cálido (amarillo)
+    ('preview_warm', 'brown', 'default'),            # 3000K - Cálido (marrón/naranja)
+    ('preview_very_warm', 'light red', 'default'),   # 2000K - Muy cálido
+    ('preview_extreme_warm', 'dark red', 'black'),   # 1000K - Máxima Calidez
 ]
 
 # Tema Dracula (adaptado a 16 colores)
@@ -50,9 +52,11 @@ PALETTE_DRACULA = [
     ('button', 'white', 'dark gray'),
     ('button_selected', 'black', 'yellow'),
     ('dialog', 'white', 'dark gray'),
-    ('preview_warm', 'yellow', 'default'),
-    ('preview_cool', 'light blue', 'default'),
-    ('preview_neutral', 'white', 'default'),
+    ('preview_cool', 'light blue', 'default'),       # 6500K - Luz día normal
+    ('preview_neutral', 'yellow', 'default'),        # 4500K - Poco cálido (amarillo)
+    ('preview_warm', 'brown', 'default'),            # 3000K - Cálido (marrón/naranja)
+    ('preview_very_warm', 'light red', 'default'),   # 2000K - Muy cálido
+    ('preview_extreme_warm', 'dark red', 'black'),   # 1000K - Máxima Calidez
 ]
 
 # Lista de temas disponibles
