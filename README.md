@@ -121,6 +121,66 @@ Los horarios se guardan en `~/.config/blugon/gamma`:
 0 0 2000 Madrugada
 ```
 
+### ¿Cómo funciona la interpolación?
+
+blugon-lite **NO** hace cambios bruscos de temperatura. En cambio, **interpola linealmente** entre los horarios adyacentes para una transición suave.
+
+**Ejemplo con 4 horarios:**
+
+```
+Horarios configurados:
+  08:00 → 6500K (luz día)
+  17:00 → 4500K (atardecer)
+  21:00 → 3000K (noche)
+  00:00 → 2000K (madrugada)
+
+Línea de tiempo de interpolación:
+
+08:00 ────────────────────── 17:00 ───────────── 21:00 ──────── 00:00
+6500K ───────────────────── 4500K ───────────── 3000K ──────── 2000K
+       ↑         ↑         ↑         ↑         ↑         ↑
+    08:00   12:00     17:00     19:00     21:00     00:00
+    6500K   5500K     4500K     3750K     3000K     2000K
+```
+
+**Cálculo en diferentes momentos:**
+
+| Hora | Posición en el trayecto | Temperatura resultante |
+|------|------------------------|------------------------|
+| 08:00 | 0% del camino (inicio) | 6500K exactos |
+| 12:00 | 44% entre 08:00 y 17:00 | 5500K |
+| 17:00 | 100% del primer trayecto | 4500K exactos |
+| 19:00 | 50% entre 17:00 y 21:00 | 3750K |
+| 21:00 | 100% del segundo trayecto | 3000K exactos |
+| 00:00 | 100% del tercer trayecto | 2000K exactos |
+
+**Fórmula de interpolación:**
+
+```
+factor = (hora_actual - hora_anterior) / (hora_siguiente - hora_anterior)
+temp_actual = temp_anterior + factor × (temp_siguiente - temp_anterior)
+```
+
+**Ejemplo a las 12:00 (entre 08:00 y 17:00):**
+
+```
+hora_anterior = 08:00 = 480 minutos
+hora_siguiente = 17:00 = 1020 minutos
+hora_actual = 12:00 = 720 minutos
+
+factor = (720 - 480) / (1020 - 480) = 240 / 540 = 0.44 (44%)
+
+temp_anterior = 6500K
+temp_siguiente = 4500K
+
+temp_actual = 6500 + 0.44 × (4500 - 6500)
+            = 6500 + 0.44 × (-2000)
+            = 6500 - 880
+            = 5620K ≈ 5500K
+```
+
+**Importante:** El daemon verifica y recalcula la interpolación **cada 5 minutos** (sincronizado a múltiplos de 5), no continuamente. Esto permite que los cambios programados se apliquen exactamente en la hora indicada.
+
 ### Temperaturas recomendadas
 
 | Temperatura | Descripción | Uso |
