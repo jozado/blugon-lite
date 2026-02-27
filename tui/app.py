@@ -665,6 +665,9 @@ class BlugonLiteTUI:
 
     def save_edit_from_modal(self):
         """Guardar edición desde el modal."""
+        import logging
+        logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
+        
         if not hasattr(self, 'edit_index'):
             self.show_message("Error: no hay índice de edición", 'error')
             return
@@ -684,15 +687,28 @@ class BlugonLiteTUI:
             self.schedules.sort(key=lambda x: x['hour'] * 60 + x['minute'])
             self.refresh_schedule_list()
             self.show_message("Horario actualizado", 'success')
+            logging.debug(f"SAVE_EDIT: Horario editado, schedules={len(self.schedules)}")
         except Exception as e:
+            logging.error(f"SAVE_EDIT: Error: {e}")
             self.show_message(f"Error: {e}", 'error')
             return
 
         self._cleanup_edit_vars()
         self.modal_open = False
         self.loop.widget = self.main_frame
+        
+        # Actualizar panel de información
+        logging.debug("SAVE_EDIT: Llamando update_info()...")
+        self.update_info()
+        logging.debug("SAVE_EDIT: update_info() completado")
+        
+        logging.debug("SAVE_EDIT: Llamando draw_screen()...")
         self.loop.draw_screen()
+        logging.debug("SAVE_EDIT: draw_screen() completado")
+        
+        logging.debug("SAVE_EDIT: Llamando save_config()...")
         self.save_config()
+        logging.debug("SAVE_EDIT: save_config() completado")
 
     def cancel_edit(self):
         """Cancelar edición."""
@@ -727,6 +743,9 @@ class BlugonLiteTUI:
 
     def save_add_from_modal(self):
         """Guardar agregado desde el modal."""
+        import logging
+        logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
+        
         try:
             label = getattr(self, 'add_label_val', get_label_for_time(self.add_hour, self.add_minute))
             self.schedules.append({
@@ -740,17 +759,28 @@ class BlugonLiteTUI:
             self.schedules.sort(key=lambda x: x['hour'] * 60 + x['minute'])
             self.refresh_schedule_list()
             self.show_message("Horario agregado", 'success')
+            logging.debug(f"SAVE_ADD: Horario agregado, schedules={len(self.schedules)}")
         except Exception as e:
+            logging.error(f"SAVE_ADD: Error: {e}")
             self.show_message(f"Error: {e}", 'error')
             return
 
         self._cleanup_add_vars()
         self.modal_open = False
         self.loop.widget = self.main_frame
-        self.loop.draw_screen()
         
-        # Guardar automáticamente al archivo
+        # Actualizar panel de información
+        logging.debug("SAVE_ADD: Llamando update_info()...")
+        self.update_info()
+        logging.debug("SAVE_ADD: update_info() completado")
+        
+        logging.debug("SAVE_ADD: Llamando draw_screen()...")
+        self.loop.draw_screen()
+        logging.debug("SAVE_ADD: draw_screen() completado")
+        
+        logging.debug("SAVE_ADD: Llamando save_config()...")
         self.save_config()
+        logging.debug("SAVE_ADD: save_config() completado")
 
     def cancel_add(self):
         """Cancelar agregado."""

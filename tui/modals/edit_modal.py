@@ -125,10 +125,13 @@ class EditScheduleModal:
     
     def save(self):
         """Guardar los cambios."""
+        import logging
+        logging.basicConfig(filename='/tmp/blugon-tui-debug.log', level=logging.DEBUG)
+        
         try:
-            label = getattr(self.app, 'edit_label_val', 
+            label = getattr(self.app, 'edit_label_val',
                           get_label_for_time(self.app.edit_hour_val, self.app.edit_minute_val))
-            
+
             self.app.schedules[self.index] = {
                 'hour': self.app.edit_hour_val,
                 'minute': self.app.edit_minute_val,
@@ -140,20 +143,29 @@ class EditScheduleModal:
             self.app.schedules.sort(key=lambda x: x['hour'] * 60 + x['minute'])
             self.app.refresh_schedule_list()
             self.app.show_message("Horario actualizado", 'success')
+            logging.debug(f"EDIT_SAVE: Horario editado, schedules={len(self.app.schedules)}")
         except Exception as e:
+            logging.error(f"EDIT_SAVE: Error al guardar: {e}")
             self.app.show_message(f"Error: {e}", 'error')
             return
-        
+
         self._cleanup()
         self.app.current_modal = None
         self.app.modal_open = False
         self.app.loop.widget = self.app.main_frame
         
         # Actualizar panel de información (hora, temperatura, próximo)
+        logging.debug("EDIT_SAVE: Llamando update_info()...")
         self.app.update_info()
+        logging.debug("EDIT_SAVE: update_info() completado")
         
+        logging.debug("EDIT_SAVE: Llamando draw_screen()...")
         self.app.loop.draw_screen()
+        logging.debug("EDIT_SAVE: draw_screen() completado")
+        
+        logging.debug("EDIT_SAVE: Llamando save_config()...")
         self.app.save_config()
+        logging.debug("EDIT_SAVE: save_config() completado")
     
     def cancel(self):
         """Cancelar la edición."""
