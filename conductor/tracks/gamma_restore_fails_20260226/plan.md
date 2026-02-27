@@ -1,6 +1,6 @@
 # Plan: Gamma no se restaura en TUI y postrm
 
-## Estado: ✅ RESUELTO - Causa raíz: xrandr, no xgamma
+## Estado: ✅ COMPLETADO - VERIFICADO POR USUARIO
 
 ---
 
@@ -32,7 +32,7 @@ Esto causa tono anaranjado que `xgamma` NO puede corregir porque son sistemas di
 
 ---
 
-## Solución Correcta
+## Solución Implementada y Verificada
 
 ### Para restaurar gamma de pantalla
 ```bash
@@ -41,46 +41,42 @@ xrandr --output LVDS-1 --gamma 1.0:1.0:1.0
 xrandr --output VGA-1 --gamma 1.0:1.0:1.0
 ```
 
-### Para blugon-lite TUI
-El TUI debe usar `xrandr` en lugar de (o además de) `xgamma`:
-
+### Para blugon-lite TUI ✅ IMPLEMENTADO
+`tui/utils.py` usa `xrandr` para restaurar gamma:
 ```python
-# Opción 1: Usar xrandr directamente
-subprocess.run(['xrandr', '--output', 'LVDS-1', '--gamma', '1.0:1.0:1.0'])
-
-# Opción 2: Usar ambos (xgamma + xrandr)
-subprocess.run(['xgamma', '-rgamma', '1.0', '-ggamma', '1.0', '-bgamma', '1.0'])
-subprocess.run(['xrandr', '--output', 'LVDS-1', '--gamma', '1.0:1.0:1.0'])
+# Detectar outputs conectados
+outputs = subprocess.run(['xrandr', '--query'], capture_output=True, text=True)
+# Para cada output conectado:
+subprocess.run(['xrandr', '--output', output, '--gamma', '1.0:1.0:1.0'])
 ```
 
-### Para postrm
-Agregar comando xrandr además de xgamma:
-
+### Para postrm ✅ IMPLEMENTADO
+`debian/DEBIAN/postrm` usa `xrandr` además de `xgamma`:
 ```bash
-# xgamma (por si acaso)
-su "$XUSER" -c "xgamma -rgamma 1.0 -ggamma 1.0 -bgamma 1.0"
-
-# xrandr (solución real)
-su "$XUSER" -c "xrandr --output LVDS-1 --gamma 1.0:1.0:1.0"
-su "$XUSER" -c "xrandr --output VGA-1 --gamma 1.0:1.0:1.0"
+# Detectar outputs
+OUTPUTS=$(xrandr --query | grep " connected" | cut -d" " -f1)
+# Para cada output, restaurar gamma como usuario X11
+su "$XUSER" -c "xrandr --output $output --gamma 1.0:1.0:1.0"
 ```
 
 ---
 
 ## Tareas
 
-### 1. Actualizar tui/utils.py para usar xrandr ⏳ PENDIENTE
-- [ ] Agregar función `restaurar_gamma_xrandr()`
-- [ ] Usar xrandr en lugar de (o además de) xgamma
-- [ ] Detectar outputs conectados dinámicamente
+### 1. Actualizar tui/utils.py para usar xrandr ✅ COMPLETADA
+- [x] Agregar detección de outputs conectados
+- [x] Usar xrandr --output --gamma 1.0:1.0:1.0
+- [x] Fallback a xgamma si xrandr falla
 
-### 2. Actualizar postrm para usar xrandr ⏳ PENDIENTE
-- [ ] Agregar comandos xrandr después de xgamma
-- [ ] Detectar outputs conectados
+### 2. Actualizar postrm para usar xrandr ✅ COMPLETADA
+- [x] Agregar comandos xrandr para cada output
+- [x] Ejecutar como usuario X11 con su
+- [x] Logging de cada operación
 
-### 3. Testing ⏳ PENDIENTE
-- [ ] Probar en PC del usuario
-- [ ] Confirmar que la pantalla se restaura VISIBILMENTE
+### 3. Testing ✅ COMPLETADO - VERIFICADO POR USUARIO
+- [x] Probar TUI: iniciar daemon → detener → ✅ pantalla se restaura
+- [x] Probar postrm: `apt purge` → ✅ pantalla se restaura
+- [x] Usuario confirmó: "Ya funciona amigo! lo lograste al fin"
 
 ---
 
@@ -109,12 +105,26 @@ xrandr --output VGA-1 --gamma 1.0:1.0:1.0
 ## Lección Aprendida
 
 1. **xgamma NO es lo mismo que xrandr** - Sistemas diferentes
-2. **Verificar xrandr primero** - Si xgamma no funciona, revisar xrandr
-3. **xiccd puede interferir** - Daemon de color de X11 puede sobrescribir configuraciones
-4. **Dos monitores = dos configuraciones** - Cada output tiene su propia gamma
+2. **SCG usa Xrandr** - Backend principal usa `XRRSetCrtcGamma()`
+3. **Para restaurar, usar el mismo sistema** - Si SCG usa Xrandr, restaurar con Xrandr
+4. **Verificar xrandr primero** - Si xgamma no funciona, revisar xrandr
+5. **xiccd puede interferir** - Daemon de color de X11 puede sobrescribir configuraciones
+6. **Dos monitores = dos configuraciones** - Cada output tiene su propia gamma
 
 ---
 
-## Próxima Acción
+## Commits Relacionados
 
-Actualizar `tui/utils.py` y `postrm` para usar `xrandr` en lugar de `xgamma`.
+- `8dd3270` - fix(gamma): Usar xrandr en lugar de xgamma para restaurar gamma
+- `4f5d3fb` - docs: Actualizar HALLAZGOS con arquitectura de backends
+- `839e87a` - docs(plan): Actualizar subtrack gamma con causa raíz real - xrandr
+
+---
+
+## Resultado Final
+
+✅ **TUI**: Al detener daemon, pantalla se restaura correctamente
+✅ **postrm**: Al desinstalar con `apt purge`, pantalla se restaura correctamente
+✅ **cleanup**: Directorios `/usr/lib/blugon-lite` se eliminan completamente
+
+**Usuario confirmó:** "Ya funciona amigo! lo lograste al fin, ahora lo desinstale y tambien cambio los colores a como estaba al inicio!"
