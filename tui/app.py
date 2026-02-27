@@ -63,24 +63,44 @@ class BlugonLiteTUI:
         with open('/tmp/tui_load.log', 'w') as f:
             f.write(f'CONFIG_FILE: {CONFIG_FILE}\n')
             f.write(f'SYSTEM_CONFIG_FILE: {SYSTEM_CONFIG_FILE}\n')
-            
+
             # Intentar leer archivo de usuario
             schedules = read_gamma_file(CONFIG_FILE)
             f.write(f'User config schedules: {len(schedules)}\n')
             if schedules:
                 for s in schedules:
                     f.write(f'  {s["time_str"]} - {s["temp_str"]}\n')
-            
+
             if not schedules:
                 schedules = read_gamma_file(SYSTEM_CONFIG_FILE)
                 f.write(f'System config schedules: {len(schedules)}\n')
-            
+
             if not schedules:
                 schedules = get_default_schedules()
                 f.write(f'Default schedules: {len(schedules)}\n')
-            
+
             self.schedules = schedules
             f.write(f'Final schedules: {len(self.schedules)}\n')
+        
+        # Calcular índice del horario actual al cargar
+        self.selected_index = self._calcular_indice_horario_actual()
+
+    def _calcular_indice_horario_actual(self):
+        """Calcular el índice del horario correspondiente a la hora actual."""
+        from datetime import datetime
+        now = datetime.now()
+        current_time = now.hour * 60 + now.minute
+        
+        # Encontrar el horario más reciente que sea <= hora actual
+        prev_index = 0
+        for i, sched in enumerate(self.schedules):
+            sched_time = sched['hour'] * 60 + sched['minute']
+            if sched_time <= current_time:
+                prev_index = i
+            else:
+                break
+        
+        return prev_index
 
     def create_widgets(self):
         """Crear widgets principales de la UI."""
@@ -158,8 +178,16 @@ class BlugonLiteTUI:
         return max(segundos_espera, 300) if segundos_espera <= 0 else segundos_espera
 
     def auto_update_info(self, loop, user_data):
-        """Actualizar automáticamente el panel de información (sincronizado con daemon)."""
+        """Actualizar automáticamente el panel de información y selección (sincronizado con daemon)."""
+        # Actualizar panel de información
         self.update_info()
+        
+        # Actualizar selección de horario en la lista
+        nuevo_index = self._calcular_indice_horario_actual()
+        if nuevo_index != self.selected_index:
+            self.selected_index = nuevo_index
+            self.refresh_schedule_list()
+        
         # Programar próxima actualización en 5 minutos (300 segundos)
         self.loop.set_alarm_in(300, self.auto_update_info)
 
@@ -296,19 +324,20 @@ class BlugonLiteTUI:
         temp_actual, prev_h, next_h = calcular_temperatura_interpolada(
             self.schedules, now.hour, now.minute
         )
-        
+
         # Obtener etiqueta del horario anterior
         prev_label = prev_h[2] if prev_h else "N/A"
         temp_info = f"{temp_actual:.0f}K ({prev_label})"
 
-        # Calcular próximo horario
+        # Calcular próximo horario con etiqueta
         if next_h:
             next_mins = next_h[0]
             if next_mins < current_time:
                 next_mins += 24 * 60
             diff_minutes = next_mins - current_time
             hours, mins = diff_minutes // 60, diff_minutes % 60
-            next_info = f"{next_h[0]//60:02d}:{next_h[0]%60:02d} → {next_h[1]}K ({hours}h {mins}m)"
+            next_label = next_h[2] if next_h[2] else "Sin etiqueta"
+            next_info = f"{next_h[0]//60:02d}:{next_h[0]%60:02d} → {next_h[1]}K ({hours}h {mins}m) - {next_label}"
         else:
             next_info = "N/A"
 
