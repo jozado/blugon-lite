@@ -53,3 +53,17 @@ This file tracks all major tracks for the project. Each track has its own detail
   - ✅ [postrm_cleanup_fails_20260226](./tracks/postrm_cleanup_fails_20260226/) - postrm no elimina directorios (MEDIUM)
   - ✅ [daemon_sync_5min_20260226](./tracks/daemon_sync_5min_20260226/) - Sincronizar daemon a múltiplos de 5 min (COMPLETADO)
 
+---
+
+## Release
+
+- [ ] **Track: Revisar documentación y subir proyecto a GitHub**
+  *Link: [./tracks/github_release_20260227/](./tracks/github_release_20260227/)*
+  *Priority: CRITICAL - Lanzamiento oficial v1.0.0*
+
+  **Objetivos:**
+  1. Limpieza de archivos temporales
+  2. Documentación completa (README, INSTALL, LICENSE)
+  3. Crear repositorio en GitHub
+  4. Publicar release v1.0.0 con paquete .deb
+
