@@ -32,6 +32,28 @@ blugon-lite es un filtro de luz azul para X Window System que ajusta automática
 
 ---
 
+## 📸 Capturas de pantalla
+
+### Interfaz principal
+
+![Interfaz principal del TUI](screenshots/interfaz.png)
+
+Vista principal del TUI: estado del daemon, temperatura de color actual, próxima transición y lista de horarios configurados.
+
+### Selector de temas
+
+![Selector de temas](screenshots/temas.png)
+
+Cambia entre el tema oscuro por defecto y Dracula desde el modal de temas.
+
+### Edición de horarios
+
+![Modal de edición de horario](screenshots/editar.png)
+
+Modal para editar hora, minuto, temperatura (Kelvin) y etiqueta, con vista previa del color resultante.
+
+---
+
 ## 📦 Instalación
 
 ### Desde paquete .deb (Recomendado)
