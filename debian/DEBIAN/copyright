@@ -1,13 +1,13 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: blugon-lite
-Source: https://github.com/tu-usuario/blugon-lite
+Source: https://github.com/jozado/blugon-lite
 
 Files: *
-Copyright: 2026 Jose MS <pepe@DebianPP.monodev.pw>
+Copyright: 2026 Jose MS <jozado@yahoo.com>
 License: MIT
 
 Files: debian/*
-Copyright: 2026 Jose MS <pepe@DebianPP.monodev.pw>
+Copyright: 2026 Jose MS <jozado@yahoo.com>
 License: MIT
 
 License: MIT

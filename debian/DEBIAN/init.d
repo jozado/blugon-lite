@@ -9,7 +9,7 @@
 # Description:       Adjusts screen color temperature based on time of day
 ### END INIT INFO
 
-# Author: Jose MS <pepe@DebianPP.monodev.pw>
+# Author: Jose MS <jozado@yahoo.com>
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="blugon-lite Blue Light Filter"

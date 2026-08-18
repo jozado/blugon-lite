@@ -3,7 +3,7 @@ Version: 1.0.0-lite
 Section: utils
 Priority: optional
 Architecture: amd64
-Maintainer: Jose MS <pepe@DebianPP.monodev.pw>
+Maintainer: Jose MS <jozado@yahoo.com>
 Depends: python3, python3-urwid, libx11-6, libxrandr2, x11-xserver-utils
 Description: Blue Light Filter for X Window System
  blugon-lite adjusts your screen's color temperature based on the time

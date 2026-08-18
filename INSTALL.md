@@ -32,7 +32,7 @@ El paquete `.deb` instala automáticamente:
 
 ```bash
 # Desde la página de releases
-wget https://github.com/tu-usuario/blugon-lite/releases/download/v1.0.0/blugon-lite_1.0.0-lite_amd64.deb
+wget https://github.com/jozado/blugon-lite/releases/download/v1.0.0/blugon-lite_1.0.0-lite_amd64.deb
 ```
 
 ### Paso 2: Instalar
@@ -68,7 +68,7 @@ blugon-lite-tui
 ### Paso 1: Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/blugon-lite.git
+git clone https://github.com/jozado/blugon-lite.git
 cd blugon-lite
 ```
 

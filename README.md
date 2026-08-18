@@ -38,7 +38,7 @@ blugon-lite es un filtro de luz azul para X Window System que ajusta automática
 
 ```bash
 # Descargar la última versión
-wget https://github.com/tu-usuario/blugon-lite/releases/download/v1.0.0/blugon-lite_1.0.0-lite_amd64.deb
+wget https://github.com/jozado/blugon-lite/releases/download/v1.0.0/blugon-lite_1.0.0-lite_amd64.deb
 
 # Instalar (las dependencias se resuelven automáticamente)
 sudo apt install ./blugon-lite_1.0.0-lite_amd64.deb
@@ -48,7 +48,7 @@ sudo apt install ./blugon-lite_1.0.0-lite_amd64.deb
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/tu-usuario/blugon-lite.git
+git clone https://github.com/jozado/blugon-lite.git
 cd blugon-lite
 
 # Instalar dependencias
