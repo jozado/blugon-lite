@@ -1,6 +1,6 @@
 # blugon-lite
 
-**Blue Light Filter for X Window System** - Una versión ligera y moderna del filtro de luz azul.
+**Blue Light Filter for X Window System** - Una versión ligera y moderna de filtro de luz azul para pantallas.
 
 ![Versión](https://img.shields.io/badge/versión-1.0.0--lite-blue)
 ![Licencia](https://img.shields.io/badge/licencia-MIT-green)
@@ -288,5 +288,5 @@ MIT License - ver archivo [LICENSE](LICENSE) para detalles.
 
 ## 📬 Contacto
 
-- Issues: [GitHub Issues](https://github.com/tu-usuario/blugon-lite/issues)
-- Email: tu-email@ejemplo.com
+- Issues: [GitHub Issues](https://github.com/jozado/blugon-lite/issues)
+- Email: jozado@yahoo.com

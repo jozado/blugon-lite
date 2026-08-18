@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Blugon-Lite Daemon
+Comment=Blue Light Filter - Daemon de ajuste automático de temperatura
+Exec=/usr/bin/blugon-lite-autostart.sh
+Terminal=false
+Type=Application
+Categories=Utility;
+Icon=blugon-lite
+Keywords=blue light;filter;screen;temperature;night;daemon;
+StartupNotify=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel
+X-XFCE-Autostart=true

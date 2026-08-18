@@ -13,9 +13,15 @@ case "$1" in
         # Copiar autostart de XDG a cada usuario si no existe
         if [ -d /home ]; then
             for user_home in /home/*; do
-                if [ -d "$user_home" ] && [ "$(basename "$user_home")" != "debian" ]; then
+                if [ -d "$user_home" ] && [ "$(basename "$user_home")" != "debian" ] && [ "$(basename "$user_home")" != "lost+found" ]; then
                     user=$(basename "$user_home")
                     config_dir="$user_home/.config/blugon"
+
+                    # Verificar que es un usuario real (tiene UID >= 1000)
+                    user_uid=$(id -u "$user" 2>/dev/null) || continue
+                    if [ "$user_uid" -lt 1000 ] 2>/dev/null; then
+                        continue
+                    fi
 
                     # Crear directorio de configuración
                     if [ ! -d "$config_dir" ]; then
@@ -42,12 +48,12 @@ case "$1" in
                         cp /usr/share/applications/blugon-lite-autostart.desktop "$autostart_dir/blugon-lite.desktop" 2>/dev/null || true
                         chown $user:$user "$autostart_dir/blugon-lite.desktop" 2>/dev/null || true
                     fi
-                    
+
                     # Registrar explícitamente en XFCE si está disponible
                     if command -v xfce4-session-settings > /dev/null 2>&1; then
                         echo "  XFCE detectado: Agregando al autoinicio de XFCE..."
                         # Usar xfce4-session-settings para registrar la aplicación
-                        su $user -c "xfce4-session-settings --sm-save-legacy 2>/dev/null || true"
+                        su "$user" -c "xfce4-session-settings --sm-save-legacy 2>/dev/null || true"
                     fi
                 fi
             done

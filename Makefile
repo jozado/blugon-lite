@@ -37,6 +37,7 @@ install:
 	install -D -m644 configs/night-owl/gamma $(DESTDIR)$(PREFIX)/share/blugon-lite/configs/night-owl/gamma
 	install -D -m644 configs/minimal/gamma $(DESTDIR)$(PREFIX)/share/blugon-lite/configs/minimal/gamma
 	install -D -m644 blugon-lite.desktop $(DESTDIR)$(PREFIX)/share/applications/blugon-lite.desktop
+	install -D -m644 blugon-lite-autostart.desktop $(DESTDIR)$(PREFIX)/share/applications/blugon-lite-autostart.desktop
 	install -D -m644 blugon-lite.svg $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/blugon-lite.svg
 	install -D -m644 README.md $(DESTDIR)$(PREFIX)/share/doc/blugon-lite/README.md
 	install -D -m644 INSTALL.md $(DESTDIR)$(PREFIX)/share/doc/blugon-lite/INSTALL.md
