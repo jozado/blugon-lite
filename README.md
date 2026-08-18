@@ -1,6 +1,6 @@
 # blugon-lite
 
-**Blue Light Filter for X Window System** - Una versión ligera y moderna de filtro de luz azul para pantallas.
+**Blue Light Filter for X Window System** - Una versión ligera y moderna de filtro de luz azul para pantallas, hecha para sistemas basados en Debian (Debian/Ubuntu).
 
 ![Versión](https://img.shields.io/badge/versión-1.0.0--lite-blue)
 ![Licencia](https://img.shields.io/badge/licencia-MIT-green)
