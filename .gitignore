@@ -1,0 +1,28 @@
+# Compilados de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Paquetes y binarios compilados
+*.deb
+backends/scg/scg
+
+# Notas personales de desarrollo
+.opencode/
+AGENTS.md
+ESTADO_ACTUAL.md
+HALLAZGOS_Y_SOLUCIONES.md
+REQUIREMENTS.md
+QWEN.md
+Propuesta_TUI
+TUI-OPTIONS.txt
+PROXIMO-TRACK.txt
+test_sync_5min.py
+
+# Conductor (notas internas)
+conductor/
+
+# Complementos externos y generados
+scripts_ia/
+graphify-out/
+blugon-prompts.txt
