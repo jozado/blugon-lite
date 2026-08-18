@@ -26,3 +26,7 @@ conductor/
 scripts_ia/
 graphify-out/
 blugon-prompts.txt
+
+# Notas personales y temporales
+PENDIENTES.md
+.playwright-cli/

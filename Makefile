@@ -68,10 +68,7 @@ clean:
 	cd backends/scg && make clean
 
 # Target para construir paquete .deb
-deb: clean build
-	# Asegurar que todo esté compilado
-	dpkg-deb --build debian blugon-lite_1.0.0-lite_amd64.deb
-	@echo ""
-	@echo "Paquete .deb construido: blugon-lite_1.0.0-lite_amd64.deb"
+deb:
+	./build-deb.sh
 
 .PHONY: build install uninstall clean deb

@@ -11,7 +11,7 @@ echo "=== Construyendo $PACKAGE_NAME $VERSION ==="
 
 # Limpiar
 rm -rf debian/tmp
-rm -f ${PACKAGE_NAME}_${VERSION}-${ARCH}.deb
+rm -f ${PACKAGE_NAME}_${VERSION}_${ARCH}.deb
 
 # Crear directorio temporal
 mkdir -p debian/tmp
@@ -26,11 +26,11 @@ cp -r debian/DEBIAN debian/tmp/DEBIAN
 chmod 755 debian/tmp/DEBIAN/postinst debian/tmp/DEBIAN/prerm debian/tmp/DEBIAN/postrm debian/tmp/DEBIAN/init.d
 
 # Construir paquete
-dpkg-deb --build debian/tmp ${PACKAGE_NAME}_${VERSION}-${ARCH}.deb
+dpkg-deb --build debian/tmp ${PACKAGE_NAME}_${VERSION}_${ARCH}.deb
 
 # Limpiar
 rm -rf debian/tmp
 
 echo ""
-echo "=== Paquete construido: ${PACKAGE_NAME}_${VERSION}-${ARCH}.deb ==="
-ls -lh ${PACKAGE_NAME}_${VERSION}-${ARCH}.deb
+echo "=== Paquete construido: ${PACKAGE_NAME}_${VERSION}_${ARCH}.deb ==="
+ls -lh ${PACKAGE_NAME}_${VERSION}_${ARCH}.deb
